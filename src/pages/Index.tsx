@@ -1,13 +1,36 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import Welcome from "./Welcome";
+import MainMenu from "./MainMenu";
+import FeatureFlow from "./FeatureFlow";
+
+type View = "welcome" | "menu" | "feature";
 
 const Index = () => {
+  const [currentView, setCurrentView] = useState<View>("welcome");
+  const [selectedFeature, setSelectedFeature] = useState<string>("");
+
+  const handleStart = () => {
+    setCurrentView("menu");
+  };
+
+  const handleSelectFeature = (feature: string) => {
+    setSelectedFeature(feature);
+    setCurrentView("feature");
+  };
+
+  const handleBack = () => {
+    setCurrentView("menu");
+    setSelectedFeature("");
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <>
+      {currentView === "welcome" && <Welcome onStart={handleStart} />}
+      {currentView === "menu" && <MainMenu onSelectFeature={handleSelectFeature} />}
+      {currentView === "feature" && (
+        <FeatureFlow feature={selectedFeature} onBack={handleBack} />
+      )}
+    </>
   );
 };
 
