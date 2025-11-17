@@ -1,0 +1,108 @@
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+export type Mode = "reply" | "initiate" | "tension";
+export type Tone = "casual" | "provocative" | "playful" | "indifferent" | "romantic" | "funny";
+
+export interface XavecoResponse {
+  suggestions: string[];
+  trial?: {
+    usedCount: number;
+    limit: number;
+    trialStart: number;
+    expiresAt: number;
+  };
+  premium: boolean;
+}
+
+export interface CheckResponse {
+  premium: boolean;
+  usedCount: number;
+  limit: number;
+  expiresAt: number;
+}
+
+export interface UpgradeResponse {
+  ok: boolean;
+}
+
+export class XavecoClient {
+  private clientId: string;
+
+  constructor() {
+    // Generate or retrieve clientId from localStorage
+    let id = localStorage.getItem('xaveco-client-id');
+    if (!id) {
+      id = `client_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      localStorage.setItem('xaveco-client-id', id);
+    }
+    this.clientId = id;
+  }
+
+  private getHeaders(): Record<string, string> {
+    return {
+      'Content-Type': 'application/json',
+      'x-xaveco-client-id': this.clientId,
+      'apikey': SUPABASE_ANON_KEY || '',
+    };
+  }
+
+  async generateSuggestions(mode: Mode, tone: Tone, input?: string): Promise<XavecoResponse> {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/xaveco`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ mode, tone, input }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (response.status === 402 && errorData.error === 'trial_expired') {
+        const error = new Error(errorData.message || 'Trial expired') as any;
+        error.code = 'trial_expired';
+        error.trial = errorData.trial;
+        throw error;
+      }
+
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async checkStatus(): Promise<CheckResponse> {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/check`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async upgrade(): Promise<UpgradeResponse> {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/upgrade`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ clientId: this.clientId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  getClientId(): string {
+    return this.clientId;
+  }
+}
+
+// Export singleton instance
+export const xavecoClient = new XavecoClient();
