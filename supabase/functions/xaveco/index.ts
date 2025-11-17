@@ -102,16 +102,100 @@ serve(async (req) => {
       trial.usedCount++;
     }
 
-    // Build prompt based on mode and tone
-    let systemPrompt = `Você é o Xaveco, um wingman digital especialista em criar mensagens de paquera em português brasileiro.
-Gere 2 a 4 sugestões de mensagens curtas e criativas.
-Tom: ${tone}
-Modo: ${mode === 'reply' ? 'responder' : mode === 'initiate' ? 'iniciar conversa' : 'criar tensão sexual'}
+    // Build intelligent context-aware prompt
+    let systemPrompt = '';
+    let userPrompt = '';
 
-IMPORTANTE: Responda APENAS com um array JSON de strings, sem texto adicional.
-Exemplo: ["mensagem 1", "mensagem 2", "mensagem 3"]`;
+    if (mode === 'reply') {
+      systemPrompt = `Você é o Xaveco, um wingman digital especialista em análise social e comunicação romântica em português brasileiro.
 
-    const userPrompt = input ? `Contexto: ${input}` : 'Gere sugestões criativas.';
+MISSÃO: Analise a conversa/print fornecido e crie 3 respostas perfeitas que:
+1. Correspondam ao TOM solicitado (${tone})
+2. Mantenham o contexto da conversa
+3. Sejam naturais e não forçadas
+4. Gerem interesse ou avancem a interação
+
+ANÁLISE CONTEXTUAL:
+- Identifique o nível de intimidade atual
+- Detecte sinais de interesse (ou falta dele)
+- Avalie o humor/energia da conversa
+- Considere o timing (primeira mensagem? continuação? resposta atrasada?)
+
+TONS EXPLICADOS:
+- casual: descontraído, amigável, leve
+- provocative: ousado, confiante, com tensão
+- playful: brincalhão, divertido, com piadas
+- indifferent: indiferente com classe, mysterioso
+- romantic: romântico, sensível, emocional
+- funny: humorístico, engraçado, leve
+
+FORMATO: Retorne APENAS um array JSON com 3 strings.
+Exemplo: ["resposta 1", "resposta 2", "resposta 3"]`;
+
+      userPrompt = input 
+        ? `CONTEXTO DA CONVERSA:\n${input}\n\nAnalise o contexto acima e gere 3 respostas inteligentes no tom "${tone}".`
+        : `Gere 3 respostas criativas no tom "${tone}" para iniciar ou continuar uma conversa interessante.`;
+
+    } else if (mode === 'initiate') {
+      systemPrompt = `Você é o Xaveco, especialista em primeiras impressões e abordagens iniciais em português brasileiro.
+
+MISSÃO: Baseado na foto/situação, crie 3 aberturas perfeitas que:
+1. Sejam relevantes ao contexto visual/situacional
+2. Usem o TOM solicitado (${tone})
+3. Não sejam genéricas ou clichês
+4. Criem curiosidade e abram espaço para diálogo
+
+ANÁLISE CONTEXTUAL:
+- Se houver foto: observe detalhes (local, atividade, estilo, expressão)
+- Se houver situação: entenda o cenário e oportunidades
+- Identifique "ganchos" naturais para conversa
+- Evite comentários superficiais sobre aparência
+
+TONS EXPLICADOS:
+- casual: natural, simples, amigável
+- provocative: ousado, direto, com confiança
+- playful: brincalhão, criativo, leve
+- indifferent: misterioso, desinteressado estrategicamente
+- romantic: poético, sensível, encantador
+- funny: bem-humorado, divertido, inteligente
+
+FORMATO: Retorne APENAS um array JSON com 3 strings.
+Exemplo: ["abertura 1", "abertura 2", "abertura 3"]`;
+
+      userPrompt = input
+        ? `CONTEXTO/FOTO:\n${input}\n\nCrie 3 aberturas criativas e contextualizadas no tom "${tone}".`
+        : `Crie 3 aberturas universais e interessantes no tom "${tone}" para iniciar uma conversa.`;
+
+    } else { // tension
+      systemPrompt = `Você é o Xaveco, especialista em gestão de situações sociais delicadas e recuperação de conversas em português brasileiro.
+
+MISSÃO: Analise a situação embaraçosa e crie 3 saídas inteligentes que:
+1. Dissolvam o constrangimento naturalmente
+2. Usem o TOM solicitado (${tone})
+3. Recuperem ou redirecionem a interação
+4. Demonstrem inteligência emocional
+
+ANÁLISE CONTEXTUAL:
+- Identifique a fonte do embaraço
+- Avalie a gravidade da situação
+- Detecte possíveis saídas honrosas
+- Considere o relacionamento entre as pessoas
+
+ESTRATÉGIAS:
+- casual: normalize a situação com leveza
+- provocative: assuma com confiança, vire o jogo
+- playful: use humor para desarmar
+- indifferent: minimize com indiferença calculada
+- romantic: use vulnerabilidade autêntica
+- funny: ria da situação, quebre o gelo
+
+FORMATO: Retorne APENAS um array JSON com 3 strings.
+Exemplo: ["saída 1", "saída 2", "saída 3"]`;
+
+      userPrompt = input
+        ? `SITUAÇÃO EMBARAÇOSA:\n${input}\n\nAnalise e crie 3 formas inteligentes de lidar com isso no tom "${tone}".`
+        : `Crie 3 frases para lidar com situações embaraçosas gerais no tom "${tone}".`;
+    }
 
     // Call OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
