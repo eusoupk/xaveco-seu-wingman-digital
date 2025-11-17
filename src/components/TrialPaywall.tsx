@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useState } from "react";
 import trialHero from "@/assets/trial-hero.jpg";
+import { xavecoClient } from "@/lib/xavecoClient";
 
 interface TrialPaywallProps {
   visible: boolean;
@@ -70,7 +71,14 @@ export function TrialPaywall({
 
         {/* CTA Button */}
         <Button
-          onClick={onUpgrade}
+          onClick={() => {
+            const url = import.meta.env.VITE_CHECKOUT_URL;
+            if (url) {
+              window.location.href = `${url}?client_id=${xavecoClient.getClientId()}`;
+            } else {
+              alert("Erro: URL de checkout não configurada.");
+            }
+          }}
           size="lg"
           className="w-full h-14 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30 transition-all hover:scale-[1.02]"
         >
