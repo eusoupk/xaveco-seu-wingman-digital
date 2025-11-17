@@ -154,9 +154,11 @@ export default function EmbarrassingMode() {
             </Button>
 
             {trialInfo && !trialInfo.premium && (
-              <div className="text-center text-sm text-muted-foreground">
-                Você usou {trialInfo.usedCount} de {trialInfo.limit} Xavecos grátis.
-              </div>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                {trialInfo.usedCount < trialInfo.limit
+                  ? `Você usou ${trialInfo.usedCount} de ${trialInfo.limit} Xavecos grátis. Faltam ${Math.max(trialInfo.limit - trialInfo.usedCount, 0)}.`
+                  : `Você usou todos os seus Xavecos grátis. O próximo já ativa o acesso premium.`}
+              </p>
             )}
           </div>
         ) : (
