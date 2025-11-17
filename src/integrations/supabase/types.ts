@@ -14,7 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      xaveco_users: {
+        Row: {
+          client_id: string
+          created_at: string
+          is_premium: boolean
+          trial_start: string
+          updated_at: string
+          used_count: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          is_premium?: boolean
+          trial_start?: string
+          updated_at?: string
+          used_count?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          is_premium?: boolean
+          trial_start?: string
+          updated_at?: string
+          used_count?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
