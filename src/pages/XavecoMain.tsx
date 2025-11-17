@@ -70,7 +70,7 @@ export default function XavecoMain() {
   };
 
   const handleUpgradeClick = () => {
-    const checkoutUrl = import.meta.env.VITE_CHECKOUT_URL;
+    const checkoutUrl = import.meta.env.CHECKOUT_URL;
     if (checkoutUrl) {
       window.location.href = `${checkoutUrl}?client_id=${xavecoClient.getClientId()}`;
     } else {
