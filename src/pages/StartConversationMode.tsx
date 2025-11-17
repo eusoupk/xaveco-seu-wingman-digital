@@ -51,7 +51,12 @@ export default function StartConversationMode() {
 
     try {
       const context = additionalContext || "Usuário quer iniciar uma conversa";
-      const response = await xavecoClient.generateSuggestions("initiate", selectedTone, context);
+      const response = await xavecoClient.generateSuggestions(
+        "initiate", 
+        selectedTone, 
+        context,
+        selectedImage || undefined
+      );
 
       setSuggestions(response.suggestions);
       if (response.trial) {
