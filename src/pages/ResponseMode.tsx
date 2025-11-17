@@ -51,7 +51,12 @@ export default function ResponseMode() {
 
     try {
       const context = additionalContext || "Usuário enviou uma captura de tela de conversa";
-      const response = await xavecoClient.generateSuggestions("reply", selectedTone, context);
+      const response = await xavecoClient.generateSuggestions(
+        "reply", 
+        selectedTone, 
+        context,
+        selectedImage || undefined
+      );
 
       setSuggestions(response.suggestions);
       if (response.trial) {

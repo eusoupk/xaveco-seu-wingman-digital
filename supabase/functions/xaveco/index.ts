@@ -38,8 +38,8 @@ serve(async (req) => {
       });
     }
 
-    // Parse body
-    const { mode, tone, input } = await req.json();
+    // Parse body - now including image
+    const { mode, tone, input, image } = await req.json();
 
     // Validate params
     const validModes: Mode[] = ["reply", "initiate", "tension"];
@@ -137,6 +137,8 @@ REGRAS OBRIGATÓRIAS:
 - Manipulação ou desrespeito
 - Ser arrogante ou forçado
 
+Se houver imagem anexada, ela é um PRINT DE CONVERSA. Leia o print, entenda o contexto e foque nas últimas mensagens para sugerir as respostas.
+
 FORMATO: Retorne APENAS um array JSON de strings, sem texto extra, sem numeração, sem markdown.
 Exemplo: ["opa, que foto massa! tá fazendo o quê de bom?", "adorei essa vibe, me conta mais", "caramba, isso aí parece top"]`;
 
@@ -158,10 +160,12 @@ REGRAS OBRIGATÓRIAS:
 ✅ Crie curiosidade e abra espaço para diálogo
 ✅ Sempre respeito, consentimento e bom senso
 
+Se houver imagem anexada, ela é uma FOTO da pessoa ou da atividade. Use os detalhes visuais (ambiente, roupa, vibe, objeto na mão, etc.) para deixar a abordagem mais personalizada, SEM comentar o corpo de forma sexual.
+
 🚫 PROIBIDO:
 - Conteúdo sexual explícito
 - Assédio ou insistência
-- Comentários superficiais sobre aparência física
+- Comentários superficiais ou ofensivos sobre aparência física
 - Xingamentos ou desrespeito
 - Ser arrogante ou forçado
 
@@ -201,7 +205,23 @@ Exemplo: ["opa, acho que eu pisei na bola ali, mal aí", "vamos dar um reset? n�
         : `Crie de 2 a 4 mensagens no tom ${selectedTone} para lidar com situações embaraçosas gerais.`;
     }
 
-    // Call OpenAI
+    // Build user content with or without image (Vision)
+    let userContent: any;
+    
+    if (image && typeof image === 'string') {
+      // Image comes as data URL (e.g., "data:image/jpeg;base64,...")
+      userContent = [
+        { type: 'text', text: userPrompt },
+        {
+          type: 'image_url',
+          image_url: { url: image }
+        }
+      ];
+    } else {
+      userContent = userPrompt;
+    }
+
+    // Call OpenAI with Vision support
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -212,7 +232,7 @@ Exemplo: ["opa, acho que eu pisei na bola ali, mal aí", "vamos dar um reset? n�
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'user', content: userContent }
         ],
         temperature: 0.8,
       }),

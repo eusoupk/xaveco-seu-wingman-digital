@@ -47,11 +47,16 @@ export class XavecoClient {
     };
   }
 
-  async generateSuggestions(mode: Mode, tone: Tone, input?: string): Promise<XavecoResponse> {
+  async generateSuggestions(mode: Mode, tone: Tone, input?: string, imageBase64?: string): Promise<XavecoResponse> {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/xaveco`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({ mode, tone, input }),
+      body: JSON.stringify({ 
+        mode, 
+        tone, 
+        input: input || '', 
+        image: imageBase64 || null 
+      }),
     });
 
     if (!response.ok) {
