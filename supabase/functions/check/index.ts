@@ -1,14 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-xaveco-client-id",
 };
-
-// WARNING: In-memory storage. In production, use Supabase database or Redis.
-// These will reset when the function restarts.
-const trialStore: Record<string, { trialStart: number; usedCount: number }> = {};
-const premiumStore: Record<string, boolean> = {};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -17,8 +13,14 @@ serve(async (req) => {
   }
 
   try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const TRIAL_LIMIT = parseInt(Deno.env.get("TRIAL_LIMIT") || "2");
     const TRIAL_DAYS = parseInt(Deno.env.get("TRIAL_DAYS") || "2");
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Supabase configuration missing");
+    }
 
     // Get clientId from header
     const clientId = req.headers.get("x-xaveco-client-id");
@@ -29,13 +31,22 @@ serve(async (req) => {
       });
     }
 
-    // Check premium status
-    const isPremium = premiumStore[clientId] === true;
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get trial info
-    const trial = trialStore[clientId];
-    const usedCount = trial ? trial.usedCount : 0;
-    const trialStart = trial ? trial.trialStart : Date.now();
+    // Get user record from database
+    const { data: userRecord } = await supabase
+      .from("xaveco_users")
+      .select("*")
+      .eq("client_id", clientId)
+      .single();
+
+    // If no record exists, return default trial info
+    const isPremium = userRecord?.is_premium || false;
+    const usedCount = userRecord?.used_count || 0;
+    const trialStart = userRecord?.trial_start 
+      ? new Date(userRecord.trial_start).getTime()
+      : Date.now();
     const trialDuration = TRIAL_DAYS * 24 * 60 * 60 * 1000; // days to ms
     const expiresAt = trialStart + trialDuration;
 
