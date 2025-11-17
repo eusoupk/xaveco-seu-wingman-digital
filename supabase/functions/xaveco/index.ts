@@ -21,7 +21,7 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const TRIAL_LIMIT = parseInt(Deno.env.get("TRIAL_LIMIT") || "2");
-    const TRIAL_DAYS = parseInt(Deno.env.get("TRIAL_DAYS") || "2");
+    const TRIAL_DAYS = parseInt(Deno.env.get("TRIAL_DAYS") || "1");
 
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is not configured");
