@@ -72,7 +72,7 @@ export function TrialPaywall({
         {/* CTA Button */}
         <Button
           onClick={() => {
-            const url = import.meta.env.CHECKOUT_URL;
+            const url = import.meta.env.VITE_CHECKOUT_URL;
             if (url) {
               window.location.href = `${url}?client_id=${xavecoClient.getClientId()}`;
             } else {
