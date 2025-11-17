@@ -1,1 +1,10 @@
 project_id = "hnxwfxgibkkxonziuzed"
+
+[functions.xaveco]
+verify_jwt = false
+
+[functions.upgrade]
+verify_jwt = false
+
+[functions.check]
+verify_jwt = false
