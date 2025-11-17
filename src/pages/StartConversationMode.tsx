@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Upload, Sparkles, Copy } from "lucide-react";
 import { toast } from "sonner";
-import { PaywallOverlay } from "@/components/PaywallOverlay";
+import { TrialPaywall } from "@/components/TrialPaywall";
 
 const tones: { id: Tone; label: string }[] = [
   { id: "casual", label: "Casual" },
@@ -105,7 +105,7 @@ export default function StartConversationMode() {
 
   if (showPaywall) {
     return (
-      <PaywallOverlay
+      <TrialPaywall
         visible={showPaywall}
         trialInfo={trialInfo}
         onUpgrade={handleUpgradeClick}

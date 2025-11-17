@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Copy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { PaywallOverlay } from "@/components/PaywallOverlay";
+import { TrialPaywall } from "@/components/TrialPaywall";
 
 const modes: { id: Mode; label: string; emoji: string }[] = [
   { id: "reply", label: "Destravar Resposta", emoji: "💬" },
@@ -205,7 +205,7 @@ export default function XavecoMain() {
           </div>
         )}
 
-        <PaywallOverlay
+        <TrialPaywall
           visible={showPaywall}
           trialInfo={trialInfo}
           onUpgrade={handleUpgradeClick}
