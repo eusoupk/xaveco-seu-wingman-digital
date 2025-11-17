@@ -1,15 +1,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-xaveco-client-id",
 };
-
-// WARNING: In-memory storage. In production, use Supabase database or Redis.
-// These will reset when the function restarts.
-const trialStore: Record<string, { trialStart: number; usedCount: number }> = {};
-const premiumStore: Record<string, boolean> = {};
 
 type Mode = "reply" | "initiate" | "tension";
 type Tone = "casual" | "provocative" | "playful" | "indifferent" | "romantic" | "funny";
@@ -22,11 +18,16 @@ serve(async (req) => {
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const TRIAL_LIMIT = parseInt(Deno.env.get("TRIAL_LIMIT") || "2");
     const TRIAL_DAYS = parseInt(Deno.env.get("TRIAL_DAYS") || "2");
 
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is not configured");
+    }
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Supabase configuration missing");
     }
 
     // Get clientId from header
@@ -37,6 +38,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Initialize Supabase client
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Parse body - now including image
     const { mode, tone, input, image } = await req.json();
@@ -59,28 +63,51 @@ serve(async (req) => {
       });
     }
 
-    // Check if premium
-    const isPremium = premiumStore[clientId] === true;
+    // Get or create user record in database
+    let { data: userRecord, error: fetchError } = await supabase
+      .from("xaveco_users")
+      .select("*")
+      .eq("client_id", clientId)
+      .single();
+
+    if (fetchError && fetchError.code !== "PGRST116") {
+      console.error("Error fetching user record:", fetchError);
+      throw new Error("Database error");
+    }
+
+    // Create user record if doesn't exist
+    if (!userRecord) {
+      const { data: newUser, error: insertError } = await supabase
+        .from("xaveco_users")
+        .insert({
+          client_id: clientId,
+          trial_start: new Date().toISOString(),
+          used_count: 0,
+          is_premium: false,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Error creating user record:", insertError);
+        throw new Error("Database error");
+      }
+
+      userRecord = newUser;
+    }
+
+    const isPremium = userRecord.is_premium;
 
     // Handle trial logic for non-premium users
     if (!isPremium) {
       const now = Date.now();
-
-      // Initialize trial if first time
-      if (!trialStore[clientId]) {
-        trialStore[clientId] = {
-          trialStart: now,
-          usedCount: 0,
-        };
-      }
-
-      const trial = trialStore[clientId];
+      const trialStart = new Date(userRecord.trial_start).getTime();
       const trialDuration = TRIAL_DAYS * 24 * 60 * 60 * 1000; // days to ms
-      const expiresAt = trial.trialStart + trialDuration;
+      const expiresAt = trialStart + trialDuration;
 
       // Check if trial expired by time or usage
       const isExpiredByTime = now > expiresAt;
-      const isExpiredByUsage = trial.usedCount >= TRIAL_LIMIT;
+      const isExpiredByUsage = userRecord.used_count >= TRIAL_LIMIT;
 
       if (isExpiredByTime || isExpiredByUsage) {
         return new Response(
@@ -88,9 +115,9 @@ serve(async (req) => {
             error: "trial_expired",
             message: "Seu período de teste do Xaveco acabou.",
             trial: {
-              usedCount: trial.usedCount,
+              usedCount: userRecord.used_count,
               limit: TRIAL_LIMIT,
-              trialStart: trial.trialStart,
+              trialStart: trialStart,
               expiresAt: expiresAt,
             },
           }),
@@ -100,9 +127,6 @@ serve(async (req) => {
           },
         );
       }
-
-      // Increment usage count
-      trial.usedCount++;
     }
 
     // Build intelligent context-aware prompt
@@ -261,19 +285,34 @@ Exemplo: ["opa, acho que eu pisei na bola ali, mal aí", "vamos dar um reset? n�
       suggestions = ["Ops! Tente novamente."];
     }
 
+    // Increment usage count for non-premium users (only after successful generation)
+    if (!isPremium) {
+      const { error: updateError } = await supabase
+        .from("xaveco_users")
+        .update({ used_count: userRecord.used_count + 1 })
+        .eq("client_id", clientId);
+
+      if (updateError) {
+        console.error("Error updating usage count:", updateError);
+      }
+
+      // Update local record for response
+      userRecord.used_count += 1;
+    }
+
     // Build response
-    const trial = trialStore[clientId];
     const trialDuration = TRIAL_DAYS * 24 * 60 * 60 * 1000;
-    const expiresAt = trial ? trial.trialStart + trialDuration : Date.now();
+    const trialStart = new Date(userRecord.trial_start).getTime();
+    const expiresAt = trialStart + trialDuration;
 
     return new Response(
       JSON.stringify({
         suggestions,
-        trial: trial
+        trial: !isPremium
           ? {
-              usedCount: trial.usedCount,
+              usedCount: userRecord.used_count,
               limit: TRIAL_LIMIT,
-              trialStart: trial.trialStart,
+              trialStart: trialStart,
               expiresAt: expiresAt,
             }
           : undefined,
