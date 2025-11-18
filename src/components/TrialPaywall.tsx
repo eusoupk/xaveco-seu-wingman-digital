@@ -72,12 +72,9 @@ export function TrialPaywall({
         {/* CTA Button */}
         <Button
           onClick={() => {
-            const url = import.meta.env.VITE_CHECKOUT_URL;
-            if (url) {
-              window.location.href = `${url}?client_id=${xavecoClient.getClientId()}`;
-            } else {
-              alert("Erro: link de checkout não configurado.");
-            }
+            const CHECKOUT_URL = "https://buy.stripe.com/4gMbJ1eNM3jT9Cz3te9oc02";
+            const clientId = xavecoClient.getClientId();
+            window.location.href = `${CHECKOUT_URL}?client_id=${clientId}`;
           }}
           size="lg"
           className="w-full h-14 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30 transition-all hover:scale-[1.02]"
