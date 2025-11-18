@@ -100,9 +100,8 @@ serve(async (req) => {
 
     // Handle trial logic for non-premium users
     if (!isPremium) {
-      // Verificar trial_messages_left primeiro
       const trialMessagesLeft = userRecord.trial_messages_left ?? 0;
-      
+
       // Verificar se trial expirou por tempo (se trial_expires_at estiver definido)
       let isExpiredByTime = false;
       if (userRecord.trial_expires_at) {
@@ -115,7 +114,7 @@ serve(async (req) => {
       const isExpiredByUsage = trialMessagesLeft <= 0;
 
       if (isExpiredByTime || isExpiredByUsage) {
-        // Log trial_expired event for analytics
+        // Log trial_expired/exhausted event for analytics
         try {
           await supabase
             .from("xaveco_events")
@@ -133,10 +132,10 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({
-            error: "trial_expired",
+            error: "trial_exhausted",
             message: "Seu período de teste do Xaveco acabou. Assine para continuar!",
             trial: {
-              messagesLeft: 0,
+              messagesLeft: Math.max(0, trialMessagesLeft),
               usedCount: userRecord.used_count,
             },
           }),
@@ -146,6 +145,33 @@ serve(async (req) => {
           },
         );
       }
+
+      // Decremento atômico simples no início da requisição
+      const { data: updatedUser, error: usageUpdateError } = await supabase
+        .from("xaveco_users")
+        .update({
+          used_count: userRecord.used_count + 1,
+          trial_messages_left: trialMessagesLeft - 1,
+        })
+        .eq("client_id", clientId)
+        .select("*")
+        .single();
+
+      if (usageUpdateError || !updatedUser) {
+        console.error("Error updating trial usage:", usageUpdateError);
+        return new Response(
+          JSON.stringify({
+            error: "trial_exhausted",
+            message: "Seu período de teste do Xaveco acabou. Assine para continuar!",
+          }),
+          {
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      userRecord = updatedUser;
     }
 
     // Build intelligent context-aware prompt
@@ -302,27 +328,6 @@ Exemplo: ["opa, acho que eu pisei na bola ali, mal aí", "vamos dar um reset? n�
     } catch (e) {
       console.error("Failed to parse OpenAI response as JSON:", generatedText);
       suggestions = ["Ops! Tente novamente."];
-    }
-
-    // Decrementar trial_messages_left para usuários não-premium
-    if (!isPremium) {
-      const currentTrialMessagesLeft = userRecord.trial_messages_left ?? 0;
-      
-      const { error: updateError } = await supabase
-        .from("xaveco_users")
-        .update({ 
-          used_count: userRecord.used_count + 1,
-          trial_messages_left: Math.max(0, currentTrialMessagesLeft - 1)
-        })
-        .eq("client_id", clientId);
-
-      if (updateError) {
-        console.error("Error updating usage count:", updateError);
-      }
-
-      // Update local record for response
-      userRecord.used_count += 1;
-      userRecord.trial_messages_left = Math.max(0, currentTrialMessagesLeft - 1);
     }
 
     // Build response

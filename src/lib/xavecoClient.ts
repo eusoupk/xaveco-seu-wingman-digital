@@ -62,7 +62,7 @@ export class XavecoClient {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       
-      if (response.status === 402 && errorData.error === 'trial_expired') {
+      if (response.status === 402 && (errorData.error === 'trial_expired' || errorData.error === 'trial_exhausted')) {
         const error = new Error(errorData.message || 'Trial expired') as any;
         error.code = 'trial_expired';
         error.trial = errorData.trial;
