@@ -43,6 +43,7 @@ export type Database = {
           client_id: string
           created_at: string
           is_premium: boolean
+          trial_messages_left: number | null
           trial_start: string
           updated_at: string
           used_count: number
@@ -51,6 +52,7 @@ export type Database = {
           client_id: string
           created_at?: string
           is_premium?: boolean
+          trial_messages_left?: number | null
           trial_start?: string
           updated_at?: string
           used_count?: number
@@ -59,6 +61,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           is_premium?: boolean
+          trial_messages_left?: number | null
           trial_start?: string
           updated_at?: string
           used_count?: number
