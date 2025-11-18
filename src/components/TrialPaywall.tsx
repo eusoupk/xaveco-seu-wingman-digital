@@ -22,8 +22,7 @@ export function TrialPaywall({
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = [trialHero]; // Can add more images later
 
-  const handleCheckoutClick = async () => {
-    const CHECKOUT_URL = "https://buy.stripe.com/your-checkout-url-here"; // IMPORTANTE: Substituir pela URL do Stripe Checkout para R$ 19,90/semana
+  const handleCheckoutClick = async () => {https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03"; // IMPORTANTE: Substituir pela URL do Stripe Checkout para R$ 19,90/semana
     const clientId = xavecoClient.getClientId();
 
     // Fire-and-forget analytics (não trava o fluxo se der erro)
