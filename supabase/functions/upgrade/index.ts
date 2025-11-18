@@ -12,6 +12,13 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // This endpoint is deprecated - use Stripe webhook instead
+  return new Response(JSON.stringify({ error: 'Endpoint deprecated - use Stripe checkout' }), {
+    status: 410,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+
+  /*
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -80,4 +87,5 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
+  */
 });

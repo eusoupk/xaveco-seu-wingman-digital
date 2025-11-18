@@ -23,14 +23,14 @@ export function TrialPaywall({
   const slides = [trialHero]; // Can add more images later
 
   const handleCheckoutClick = async () => {
-    const CHECKOUT_URL = "https://buy.stripe.com/4gMbJ1eNM3jT9Cz3te9oc02";
+    const CHECKOUT_URL = "https://buy.stripe.com/your-checkout-url-here"; // IMPORTANTE: Substituir pela URL do Stripe Checkout para R$ 19,90/semana
     const clientId = xavecoClient.getClientId();
 
     // Fire-and-forget analytics (não trava o fluxo se der erro)
     try {
       supabase.functions.invoke("analytics", {
         body: {
-          type: "checkout_click",
+          type: "checkout_click_trial",
           clientId: clientId,
         },
       }).catch(() => {});
@@ -39,7 +39,7 @@ export function TrialPaywall({
     }
 
     // Redireciona para Stripe
-    window.location.href = `${CHECKOUT_URL}?client_id=${clientId}`;
+    window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}`;
   };
 
   if (!visible) return null;
@@ -50,10 +50,10 @@ export function TrialPaywall({
         {/* Header */}
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-bold text-white">
-            Melhore sua vida social
+            Experimente 2 mensagens grátis
           </h1>
           <p className="text-purple-200/80 text-base">
-            Fique melhor em puxar assunto e responder mensagens
+            Teste o Xaveco antes de assinar
           </p>
         </div>
 
@@ -84,24 +84,24 @@ export function TrialPaywall({
           </div>
         </div>
 
-        {/* No Payment Now */}
+        {/* Trial Info */}
         <div className="flex items-center justify-center gap-2 text-purple-100">
           <Check className="w-5 h-5 text-green-400" />
-          <span className="text-sm font-medium">Nenhuma cobrança agora</span>
+          <span className="text-sm font-medium">2 mensagens grátis para testar</span>
         </div>
 
         {/* CTA Button */}
         <Button
-          onClick={handleCheckoutClick}
+          onClick={onUpgrade}
           size="lg"
-          className="w-full h-14 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30 transition-all hover:scale-[1.02]"
+          className="w-full h-14 text-lg font-semibold bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/30 transition-all hover:scale-[1.02]"
         >
-          Testar de graça 🙌
+          Começar teste grátis 🎯
         </Button>
 
         {/* Pricing Text */}
         <p className="text-center text-sm text-purple-300/70">
-          3 dias grátis, depois R$ 39,90/semana
+          Depois assine por R$ 19,90/semana
         </p>
 
         {/* Bottom Links */}

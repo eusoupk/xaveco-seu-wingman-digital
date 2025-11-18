@@ -1,0 +1,140 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import Stripe from "https://esm.sh/stripe@14.10.0";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
+    const STRIPE_WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Missing required environment variables");
+    }
+
+    const stripe = new Stripe(STRIPE_SECRET_KEY, {
+      apiVersion: "2023-10-16",
+    });
+
+    const signature = req.headers.get("stripe-signature");
+    if (!signature) {
+      return new Response(JSON.stringify({ error: "No signature" }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body = await req.text();
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err);
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Handle checkout.session.completed event
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const clientId = session.metadata?.client_id;
+
+      if (!clientId) {
+        console.error("No client_id in session metadata");
+        return new Response(JSON.stringify({ error: "No client_id" }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Update or create user as premium
+      const { data: existingUser } = await supabase
+        .from("xaveco_users")
+        .select("*")
+        .eq("client_id", clientId)
+        .single();
+
+      if (existingUser) {
+        const { error } = await supabase
+          .from("xaveco_users")
+          .update({ is_premium: true })
+          .eq("client_id", clientId);
+
+        if (error) {
+          console.error("Error updating user to premium:", error);
+          throw error;
+        }
+      } else {
+        const { error } = await supabase
+          .from("xaveco_users")
+          .insert({
+            client_id: clientId,
+            is_premium: true,
+            trial_start: new Date().toISOString(),
+            used_count: 0,
+            trial_messages_left: 0,
+          });
+
+        if (error) {
+          console.error("Error creating premium user:", error);
+          throw error;
+        }
+      }
+
+      console.log(`Client ${clientId} upgraded to premium via webhook`);
+    }
+
+    // Handle subscription events
+    if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
+      const subscription = event.data.object as Stripe.Subscription;
+      const clientId = subscription.metadata?.client_id;
+
+      if (!clientId) {
+        console.log("No client_id in subscription metadata");
+        return new Response(JSON.stringify({ received: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // If subscription is canceled or not active, remove premium status
+      if (subscription.status !== 'active') {
+        const { error } = await supabase
+          .from("xaveco_users")
+          .update({ is_premium: false })
+          .eq("client_id", clientId);
+
+        if (error) {
+          console.error("Error removing premium status:", error);
+        } else {
+          console.log(`Client ${clientId} premium removed due to subscription status: ${subscription.status}`);
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
