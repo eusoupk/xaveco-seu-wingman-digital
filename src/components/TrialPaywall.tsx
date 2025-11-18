@@ -92,11 +92,11 @@ export function TrialPaywall({
 
         {/* CTA Button */}
         <Button
-          onClick={onUpgrade}
+          onClick={handleCheckoutClick}
           size="lg"
           className="w-full h-14 text-lg font-semibold bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/30 transition-all hover:scale-[1.02]"
         >
-          Começar teste grátis 🎯
+          Assinar por R$ 19,90/semana 💎
         </Button>
 
         {/* Pricing Text */}
