@@ -20,11 +20,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/wizard" element={<Home />} />
           <Route path="/response-mode" element={<ResponseMode />} />
           <Route path="/start-conversation" element={<StartConversationMode />} />
           <Route path="/embarrassing-mode" element={<EmbarrassingMode />} />
-          <Route path="/old" element={<Index />} />
           <Route path="/old-xaveco" element={<XavecoMain />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
