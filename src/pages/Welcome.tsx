@@ -8,7 +8,7 @@ const Welcome = () => {
   const navigate = useNavigate();
 
   const handleCheckoutClick = async () => {
-    const CHECKOUT_URL = "https://buy.stripe.com/your-checkout-url-here"; // IMPORTANTE: Substituir pela URL do Stripe Checkout para R$ 19,90/semana
+    const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
     const clientId = xavecoClient.getClientId();
 
     // Fire-and-forget analytics
@@ -23,8 +23,12 @@ const Welcome = () => {
       // Ignora erro de analytics
     }
 
-    // Redireciona para Stripe
+    // Redireciona para Stripe com client_reference_id
     window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}`;
+  };
+
+  const handleTrialClick = () => {
+    navigate("/trial");
   };
 
   return (
@@ -57,7 +61,7 @@ const Welcome = () => {
           Quero destravar minha coragem 💥
         </Button>
         <button
-          onClick={() => navigate("/trial")}
+          onClick={handleTrialClick}
           className="text-sm text-muted-foreground hover:text-foreground underline transition-colors w-full text-center"
         >
           Quero testar antes

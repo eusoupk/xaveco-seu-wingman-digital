@@ -4,7 +4,7 @@ import Stripe from "https://esm.sh/stripe@14.10.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
 };
 
 serve(async (req) => {
@@ -37,10 +37,12 @@ serve(async (req) => {
     const body = await req.text();
     let event: Stripe.Event;
 
+    // Verificar assinatura do webhook
     try {
       event = stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
+      console.log(`✅ Webhook signature verified for event: ${event.id} (${event.type})`);
     } catch (err) {
-      console.error("Webhook signature verification failed:", err);
+      console.error("❌ Webhook signature verification failed:", err);
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -49,20 +51,43 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Handle checkout.session.completed event
+    // IDEMPOTÊNCIA: verificar se evento já foi processado
+    const { data: existingEvent } = await supabase
+      .from("billing_events")
+      .select("id")
+      .eq("stripe_event_id", event.id)
+      .single();
+
+    if (existingEvent) {
+      console.log(`⚠️ Event ${event.id} already processed, skipping`);
+      return new Response(JSON.stringify({ received: true, message: "Event already processed" }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Processar eventos
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      const clientId = session.metadata?.client_id;
+      
+      // Extrair client_id de client_reference_id ou metadata
+      const clientId = session.client_reference_id || session.metadata?.client_id;
 
       if (!clientId) {
-        console.error("No client_id in session metadata");
-        return new Response(JSON.stringify({ error: "No client_id" }), {
+        console.error(`❌ No client_id found in session ${session.id}`);
+        return new Response(JSON.stringify({ error: "No client_id in session" }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Update or create user as premium
+      console.log(`💰 Processing checkout for client: ${clientId}`);
+
+      // Calcular premium_until (7 dias para plano semanal)
+      const premiumUntil = new Date();
+      premiumUntil.setDate(premiumUntil.getDate() + 7);
+
+      // Atualizar ou criar usuário como premium
       const { data: existingUser } = await supabase
         .from("xaveco_users")
         .select("*")
@@ -72,11 +97,14 @@ serve(async (req) => {
       if (existingUser) {
         const { error } = await supabase
           .from("xaveco_users")
-          .update({ is_premium: true })
+          .update({ 
+            is_premium: true,
+            premium_until: premiumUntil.toISOString()
+          })
           .eq("client_id", clientId);
 
         if (error) {
-          console.error("Error updating user to premium:", error);
+          console.error(`❌ Error updating user to premium:`, error);
           throw error;
         }
       } else {
@@ -85,18 +113,35 @@ serve(async (req) => {
           .insert({
             client_id: clientId,
             is_premium: true,
+            premium_until: premiumUntil.toISOString(),
             trial_start: new Date().toISOString(),
             used_count: 0,
             trial_messages_left: 0,
           });
 
         if (error) {
-          console.error("Error creating premium user:", error);
+          console.error(`❌ Error creating premium user:`, error);
           throw error;
         }
       }
 
-      console.log(`Client ${clientId} upgraded to premium via webhook`);
+      // Registrar evento na tabela de auditoria
+      const { error: auditError } = await supabase
+        .from("billing_events")
+        .insert({
+          stripe_event_id: event.id,
+          client_id: clientId,
+          amount: session.amount_total,
+          plan: "weekly",
+          raw_event: event as any,
+        });
+
+      if (auditError) {
+        console.error(`⚠️ Error recording billing event:`, auditError);
+        // Não falhar o webhook por erro de auditoria
+      }
+
+      console.log(`✅ Client ${clientId} upgraded to premium until ${premiumUntil.toISOString()}`);
     }
 
     // Handle subscription events

@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.check]
 verify_jwt = false
+
+[functions.start-trial]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false

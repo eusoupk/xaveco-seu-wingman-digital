@@ -100,14 +100,19 @@ serve(async (req) => {
 
     // Handle trial logic for non-premium users
     if (!isPremium) {
-      const now = Date.now();
-      const trialStart = new Date(userRecord.trial_start).getTime();
-      const trialDuration = TRIAL_DAYS * 24 * 60 * 60 * 1000; // days to ms
-      const expiresAt = trialStart + trialDuration;
+      // Verificar trial_messages_left primeiro
+      const trialMessagesLeft = userRecord.trial_messages_left ?? 0;
+      
+      // Verificar se trial expirou por tempo (se trial_expires_at estiver definido)
+      let isExpiredByTime = false;
+      if (userRecord.trial_expires_at) {
+        const now = new Date();
+        const expiresAt = new Date(userRecord.trial_expires_at);
+        isExpiredByTime = now > expiresAt;
+      }
 
-      // Check if trial expired by time or usage
-      const isExpiredByTime = now > expiresAt;
-      const isExpiredByUsage = userRecord.used_count >= TRIAL_LIMIT;
+      // Verificar se trial expirou por uso
+      const isExpiredByUsage = trialMessagesLeft <= 0;
 
       if (isExpiredByTime || isExpiredByUsage) {
         // Log trial_expired event for analytics
@@ -118,8 +123,8 @@ serve(async (req) => {
               client_id: clientId,
               event_type: "trial_expired",
               metadata: {
+                trial_messages_left: trialMessagesLeft,
                 used_count: userRecord.used_count,
-                limit: TRIAL_LIMIT,
               },
             });
         } catch (analyticsError) {
@@ -129,12 +134,10 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             error: "trial_expired",
-            message: "Seu período de teste do Xaveco acabou.",
+            message: "Seu período de teste do Xaveco acabou. Assine para continuar!",
             trial: {
+              messagesLeft: 0,
               usedCount: userRecord.used_count,
-              limit: TRIAL_LIMIT,
-              trialStart: trialStart,
-              expiresAt: expiresAt,
             },
           }),
           {
@@ -301,11 +304,16 @@ Exemplo: ["opa, acho que eu pisei na bola ali, mal aí", "vamos dar um reset? n�
       suggestions = ["Ops! Tente novamente."];
     }
 
-    // Increment usage count for non-premium users (only after successful generation)
+    // Decrementar trial_messages_left para usuários não-premium
     if (!isPremium) {
+      const currentTrialMessagesLeft = userRecord.trial_messages_left ?? 0;
+      
       const { error: updateError } = await supabase
         .from("xaveco_users")
-        .update({ used_count: userRecord.used_count + 1 })
+        .update({ 
+          used_count: userRecord.used_count + 1,
+          trial_messages_left: Math.max(0, currentTrialMessagesLeft - 1)
+        })
         .eq("client_id", clientId);
 
       if (updateError) {
@@ -314,22 +322,17 @@ Exemplo: ["opa, acho que eu pisei na bola ali, mal aí", "vamos dar um reset? n�
 
       // Update local record for response
       userRecord.used_count += 1;
+      userRecord.trial_messages_left = Math.max(0, currentTrialMessagesLeft - 1);
     }
 
     // Build response
-    const trialDuration = TRIAL_DAYS * 24 * 60 * 60 * 1000;
-    const trialStart = new Date(userRecord.trial_start).getTime();
-    const expiresAt = trialStart + trialDuration;
-
     return new Response(
       JSON.stringify({
         suggestions,
         trial: !isPremium
           ? {
+              messagesLeft: userRecord.trial_messages_left ?? 0,
               usedCount: userRecord.used_count,
-              limit: TRIAL_LIMIT,
-              trialStart: trialStart,
-              expiresAt: expiresAt,
             }
           : undefined,
         premium: isPremium,

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_events: {
+        Row: {
+          amount: number | null
+          client_id: string | null
+          created_at: string
+          id: number
+          plan: string | null
+          raw_event: Json | null
+          stripe_event_id: string
+        }
+        Insert: {
+          amount?: number | null
+          client_id?: string | null
+          created_at?: string
+          id?: number
+          plan?: string | null
+          raw_event?: Json | null
+          stripe_event_id: string
+        }
+        Update: {
+          amount?: number | null
+          client_id?: string | null
+          created_at?: string
+          id?: number
+          plan?: string | null
+          raw_event?: Json | null
+          stripe_event_id?: string
+        }
+        Relationships: []
+      }
       xaveco_events: {
         Row: {
           client_id: string
@@ -43,6 +73,8 @@ export type Database = {
           client_id: string
           created_at: string
           is_premium: boolean
+          premium_until: string | null
+          trial_expires_at: string | null
           trial_messages_left: number | null
           trial_start: string
           updated_at: string
@@ -52,6 +84,8 @@ export type Database = {
           client_id: string
           created_at?: string
           is_premium?: boolean
+          premium_until?: string | null
+          trial_expires_at?: string | null
           trial_messages_left?: number | null
           trial_start?: string
           updated_at?: string
@@ -61,6 +95,8 @@ export type Database = {
           client_id?: string
           created_at?: string
           is_premium?: boolean
+          premium_until?: string | null
+          trial_expires_at?: string | null
           trial_messages_left?: number | null
           trial_start?: string
           updated_at?: string
