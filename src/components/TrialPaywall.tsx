@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { useState } from "react";
 import trialHero from "@/assets/trial-hero.jpg";
 import { xavecoClient } from "@/lib/xavecoClient";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TrialPaywallProps {
   visible: boolean;
@@ -20,6 +21,26 @@ export function TrialPaywall({
 }: TrialPaywallProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = [trialHero]; // Can add more images later
+
+  const handleCheckoutClick = async () => {
+    const CHECKOUT_URL = "https://buy.stripe.com/4gMbJ1eNM3jT9Cz3te9oc02";
+    const clientId = xavecoClient.getClientId();
+
+    // Fire-and-forget analytics (não trava o fluxo se der erro)
+    try {
+      supabase.functions.invoke("analytics", {
+        body: {
+          type: "checkout_click",
+          clientId: clientId,
+        },
+      }).catch(() => {});
+    } catch {
+      // Ignora erro de analytics
+    }
+
+    // Redireciona para Stripe
+    window.location.href = `${CHECKOUT_URL}?client_id=${clientId}`;
+  };
 
   if (!visible) return null;
 
@@ -71,11 +92,7 @@ export function TrialPaywall({
 
         {/* CTA Button */}
         <Button
-          onClick={() => {
-            const CHECKOUT_URL = "https://buy.stripe.com/4gMbJ1eNM3jT9Cz3te9oc02";
-            const clientId = xavecoClient.getClientId();
-            window.location.href = `${CHECKOUT_URL}?client_id=${clientId}`;
-          }}
+          onClick={handleCheckoutClick}
           size="lg"
           className="w-full h-14 text-lg font-semibold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30 transition-all hover:scale-[1.02]"
         >

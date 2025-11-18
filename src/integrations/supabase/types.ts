@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      xaveco_events: {
+        Row: {
+          client_id: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       xaveco_users: {
         Row: {
           client_id: string

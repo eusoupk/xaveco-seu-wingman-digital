@@ -110,6 +110,22 @@ serve(async (req) => {
       const isExpiredByUsage = userRecord.used_count >= TRIAL_LIMIT;
 
       if (isExpiredByTime || isExpiredByUsage) {
+        // Log trial_expired event for analytics
+        try {
+          await supabase
+            .from("xaveco_events")
+            .insert({
+              client_id: clientId,
+              event_type: "trial_expired",
+              metadata: {
+                used_count: userRecord.used_count,
+                limit: TRIAL_LIMIT,
+              },
+            });
+        } catch (analyticsError) {
+          console.error("Error logging trial_expired event:", analyticsError);
+        }
+
         return new Response(
           JSON.stringify({
             error: "trial_expired",
