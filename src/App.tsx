@@ -7,7 +7,7 @@ import Home from "./pages/Home";
 import ResponseMode from "./pages/ResponseMode";
 import StartConversationMode from "./pages/StartConversationMode";
 import EmbarrassingMode from "./pages/EmbarrassingMode";
-import Index from "./pages/Index";
+import Welcome from "./pages/Welcome";
 import XavecoMain from "./pages/XavecoMain";
 import NotFound from "./pages/NotFound";
 
@@ -20,7 +20,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Welcome />} />
           <Route path="/wizard" element={<Home />} />
           <Route path="/response-mode" element={<ResponseMode />} />
           <Route path="/start-conversation" element={<StartConversationMode />} />

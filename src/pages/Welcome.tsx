@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import xavecoIcon from "@/assets/xaveco-icon.png";
 
-interface WelcomeProps {
-  onStart: () => void;
-}
+const Welcome = () => {
+  const navigate = useNavigate();
 
-const Welcome = ({ onStart }: WelcomeProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-8">
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-md w-full">
@@ -30,7 +29,7 @@ const Welcome = ({ onStart }: WelcomeProps) => {
         </p>
         <Button
           size="lg"
-          onClick={onStart}
+          onClick={() => navigate("/wizard")}
           className="w-full h-14 text-lg font-bold rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
         >
           Começar
