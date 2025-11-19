@@ -8,30 +8,44 @@ const CheckoutSuccess = () => {
   const [status, setStatus] = useState<'checking' | 'success' | 'error'>('checking');
 
   useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 20; // 20 tentativas = ~60 segundos
+
     const checkPremiumStatus = async () => {
       try {
-        // Aguardar um pouco para o webhook processar
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+        console.log(`Checking premium status... attempt ${attempts}/${maxAttempts}`);
         
         const result = await xavecoClient.checkStatus();
+        console.log("Status result:", result);
         
         if (result.premium) {
+          console.log("✅ Premium activated!");
           setStatus('success');
           // Redirecionar para o jogo principal
           setTimeout(() => {
             navigate("/wizard");
           }, 1500);
+        } else if (attempts >= maxAttempts) {
+          console.log("Max attempts reached, redirecting anyway");
+          // Após muitas tentativas, redirecionar mesmo assim
+          navigate("/wizard");
         } else {
-          // Se ainda não está premium, tentar novamente em breve
+          // Tentar novamente em 3 segundos
           setTimeout(checkPremiumStatus, 3000);
         }
       } catch (error) {
         console.error("Error checking premium status:", error);
-        setStatus('error');
+        if (attempts >= maxAttempts) {
+          setStatus('error');
+        } else {
+          setTimeout(checkPremiumStatus, 3000);
+        }
       }
     };
 
-    checkPremiumStatus();
+    // Aguardar 2 segundos antes da primeira tentativa
+    setTimeout(checkPremiumStatus, 2000);
   }, [navigate]);
 
   return (
