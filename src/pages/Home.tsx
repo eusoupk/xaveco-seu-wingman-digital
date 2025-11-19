@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { MessageSquare, Image as ImageIcon, Frown } from "lucide-react";
+import { xavecoClient } from "@/lib/xavecoClient";
 
 interface ModeCardProps {
   icon: React.ReactNode;
@@ -34,6 +36,19 @@ const ModeCard = ({ icon, title, description, stars, tipsCount, onClick }: ModeC
 
 export default function Home() {
   const navigate = useNavigate();
+
+  // Verificar status premium ao carregar a página
+  useEffect(() => {
+    const checkPremium = async () => {
+      try {
+        const status = await xavecoClient.checkStatus();
+        console.log("Status checked on /wizard:", status);
+      } catch (error) {
+        console.error("Error checking status:", error);
+      }
+    };
+    checkPremium();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-6">
