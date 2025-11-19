@@ -27,7 +27,7 @@ const TrialPage = () => {
         if (response.ok) {
           // Trial iniciado com sucesso, redirecionar para tela principal
           setTimeout(() => {
-            navigate("/xaveco");
+            navigate("/wizard");
           }, 1000);
         } else {
           console.error("Erro ao iniciar trial");
@@ -47,6 +47,7 @@ const TrialPage = () => {
   const handleUpgrade = () => {
     const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
     const clientId = xavecoClient.getClientId();
+    const successUrl = `${window.location.origin}/success`;
 
     // Fire-and-forget analytics
     try {
@@ -61,11 +62,11 @@ const TrialPage = () => {
     }
 
     // Redireciona para Stripe
-    window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}`;
+    window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}&success_url=${encodeURIComponent(successUrl)}`;
   };
 
   const handleAlreadyHaveAccess = () => {
-    navigate("/xaveco");
+    navigate("/wizard");
   };
 
   if (loading) {
