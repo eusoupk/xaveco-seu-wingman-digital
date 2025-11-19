@@ -11,6 +11,7 @@ import Welcome from "./pages/Welcome";
 import XavecoMain from "./pages/XavecoMain";
 import NotFound from "./pages/NotFound";
 import TrialPage from "./pages/TrialPage";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/trial" element={<TrialPage />} />
+          <Route path="/success" element={<CheckoutSuccess />} />
           <Route path="/wizard" element={<Home />} />
           <Route path="/response-mode" element={<ResponseMode />} />
           <Route path="/start-conversation" element={<StartConversationMode />} />

@@ -10,6 +10,7 @@ const Welcome = () => {
   const handleCheckoutClick = async () => {
     const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
     const clientId = xavecoClient.getClientId();
+    const successUrl = `${window.location.origin}/success`;
 
     // Fire-and-forget analytics
     try {
@@ -23,8 +24,8 @@ const Welcome = () => {
       // Ignora erro de analytics
     }
 
-    // Redireciona para Stripe com client_reference_id
-    window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}`;
+    // Redireciona para Stripe com client_reference_id e success_url
+    window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}&success_url=${encodeURIComponent(successUrl)}`;
   };
 
   const handleTrialClick = () => {
