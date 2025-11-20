@@ -40,22 +40,17 @@ serve(async (req) => {
     const bodyBuffer = await req.arrayBuffer();
     const bodyBytes = new Uint8Array(bodyBuffer);
     
-    // Converter para string mantendo encoding exato
-    const decoder = new TextDecoder('utf-8');
-    const body = decoder.decode(bodyBytes);
-    
-    console.log(`📨 Webhook received - signature present, body size: ${body.length} bytes`);
+    console.log(`📨 Webhook received - signature present, body size: ${bodyBytes.length} bytes`);
     
     let event: Stripe.Event;
 
-    // Verificar assinatura do webhook
+    // Verificar assinatura do webhook (ASYNC - necessário para Deno/Edge Runtime)
     try {
-      event = stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
+      event = await stripe.webhooks.constructEventAsync(bodyBytes, signature, STRIPE_WEBHOOK_SECRET);
       console.log(`✅ Webhook signature verified for event: ${event.id} (${event.type})`);
     } catch (err) {
       console.error("❌ Webhook signature verification failed:", err);
       console.error("❌ Signature header:", signature?.substring(0, 20) + "...");
-      console.error("❌ Body preview:", body?.substring(0, 100) + "...");
       return new Response(JSON.stringify({ error: "Invalid signature", details: err instanceof Error ? err.message : "Unknown" }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
