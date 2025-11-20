@@ -81,12 +81,9 @@ export default function ResponseMode() {
   };
 
   const handleUpgradeClick = () => {
-    const checkoutUrl = import.meta.env.CHECKOUT_URL;
-    if (checkoutUrl) {
-      window.location.href = `${checkoutUrl}?client_id=${xavecoClient.getClientId()}`;
-    } else {
-      alert("Link de checkout não configurado.");
-    }
+    const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
+    const clientId = xavecoClient.getClientId();
+    window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}`;
   };
 
   const handleAlreadyHaveAccess = async () => {
