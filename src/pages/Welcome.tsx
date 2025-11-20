@@ -3,9 +3,31 @@ import { useNavigate } from "react-router-dom";
 import xavecoIcon from "@/assets/xaveco-icon.png";
 import { xavecoClient } from "@/lib/xavecoClient";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const Welcome = () => {
   const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    // Checar status premium ao carregar
+    const checkPremiumStatus = async () => {
+      try {
+        const result = await xavecoClient.checkStatus();
+        if (result.isPremium) {
+          console.log('✅ User is premium, redirecting to wizard');
+          navigate("/wizard");
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking premium status:', error);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkPremiumStatus();
+  }, [navigate]);
 
   const handleCheckoutClick = async () => {
     const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
@@ -30,6 +52,17 @@ const Welcome = () => {
   const handleTrialClick = () => {
     navigate("/trial");
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <img src={xavecoIcon} alt="Xaveco" className="w-24 h-24 mb-4 mx-auto animate-bounce" />
+          <p className="text-muted-foreground">Verificando acesso...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-8">

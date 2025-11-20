@@ -89,7 +89,7 @@ export default function StartConversationMode() {
   const handleAlreadyHaveAccess = async () => {
     try {
       const status = await xavecoClient.checkStatus();
-      if (status.premium) {
+      if (status.ok && status.isPremium) {
         setShowPaywall(false);
         toast.success("Acesso premium liberado!");
       } else {
