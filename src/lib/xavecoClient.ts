@@ -16,10 +16,9 @@ export interface XavecoResponse {
 }
 
 export interface CheckResponse {
-  premium: boolean;
-  usedCount: number;
-  limit: number;
-  expiresAt: number;
+  ok: boolean;
+  isPremium: boolean;
+  freePlaysLeft?: number;
 }
 
 export interface UpgradeResponse {
@@ -76,9 +75,24 @@ export class XavecoClient {
   }
 
   async checkStatus(): Promise<CheckResponse> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/check`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/status`, {
       method: 'GET',
       headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async confirmCheckout(sessionId: string): Promise<{ ok: boolean; isPremium: boolean }> {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/confirm-checkout`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ session_id: sessionId }),
     });
 
     if (!response.ok) {

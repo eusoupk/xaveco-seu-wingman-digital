@@ -9,23 +9,33 @@ const CheckoutSuccess = () => {
 
   useEffect(() => {
     let attempts = 0;
-    const maxAttempts = 20; // 20 tentativas = ~60 segundos
+    const maxAttempts = 6; // 6 tentativas = ~12 segundos
     let mounted = true;
 
-    const checkPremiumStatus = async () => {
+    // Pegar session_id da URL
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+
+    if (!sessionId) {
+      console.error('No session_id in URL');
+      setStatus('error');
+      return;
+    }
+
+    const confirmCheckout = async () => {
       if (!mounted) return;
       
       try {
         attempts++;
-        const clientId = xavecoClient.getClientId();
-        console.log(`[${attempts}/${maxAttempts}] Checking premium for client: ${clientId}`);
+        console.log(`[${attempts}/${maxAttempts}] Confirming checkout...`);
         
-        const result = await xavecoClient.checkStatus();
-        console.log(`[${attempts}/${maxAttempts}] Status:`, result);
+        // Chamar confirm-checkout para ativar premium
+        const result = await xavecoClient.confirmCheckout(sessionId);
+        console.log(`[${attempts}/${maxAttempts}] Result:`, result);
         
         if (!mounted) return;
         
-        if (result.premium) {
+        if (result.ok && result.isPremium) {
           console.log("✅ Premium activated!");
           setStatus('success');
           // Redirecionar para o jogo principal
@@ -33,11 +43,11 @@ const CheckoutSuccess = () => {
             if (mounted) navigate("/wizard");
           }, 1500);
         } else if (attempts >= maxAttempts) {
-          console.log("⚠️ Max attempts reached, redirecting anyway");
+          console.log("⚠️ Max attempts reached");
           setStatus('error');
         } else {
-          // Tentar novamente em 3 segundos
-          setTimeout(checkPremiumStatus, 3000);
+          // Tentar novamente em 2 segundos
+          setTimeout(confirmCheckout, 2000);
         }
       } catch (error) {
         console.error(`[${attempts}/${maxAttempts}] Error:`, error);
@@ -46,17 +56,16 @@ const CheckoutSuccess = () => {
         if (attempts >= maxAttempts) {
           setStatus('error');
         } else {
-          setTimeout(checkPremiumStatus, 3000);
+          setTimeout(confirmCheckout, 2000);
         }
       }
     };
 
-    // Aguardar 2 segundos antes da primeira tentativa
-    const timer = setTimeout(checkPremiumStatus, 2000);
+    // Iniciar confirmação imediatamente
+    confirmCheckout();
 
     return () => {
       mounted = false;
-      clearTimeout(timer);
     };
   }, [navigate]);
 
