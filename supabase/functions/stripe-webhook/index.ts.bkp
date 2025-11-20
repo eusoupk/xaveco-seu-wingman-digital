@@ -28,24 +28,13 @@ serve(async (req) => {
 
     const signature = req.headers.get("stripe-signature");
     if (!signature) {
-      console.error("❌ Missing stripe-signature header");
       return new Response(JSON.stringify({ error: "No signature" }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // CRÍTICO: Ler body como raw bytes (não como texto ou JSON)
-    // Stripe requer o body exato para validar a assinatura
-    const bodyBuffer = await req.arrayBuffer();
-    const bodyBytes = new Uint8Array(bodyBuffer);
-    
-    // Converter para string mantendo encoding exato
-    const decoder = new TextDecoder('utf-8');
-    const body = decoder.decode(bodyBytes);
-    
-    console.log(`📨 Webhook received - signature present, body size: ${body.length} bytes`);
-    
+    const body = await req.text();
     let event: Stripe.Event;
 
     // Verificar assinatura do webhook
@@ -54,9 +43,7 @@ serve(async (req) => {
       console.log(`✅ Webhook signature verified for event: ${event.id} (${event.type})`);
     } catch (err) {
       console.error("❌ Webhook signature verification failed:", err);
-      console.error("❌ Signature header:", signature?.substring(0, 20) + "...");
-      console.error("❌ Body preview:", body?.substring(0, 100) + "...");
-      return new Response(JSON.stringify({ error: "Invalid signature", details: err instanceof Error ? err.message : "Unknown" }), {
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
