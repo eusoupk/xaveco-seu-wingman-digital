@@ -10,32 +10,39 @@ const CheckoutSuccess = () => {
   useEffect(() => {
     let attempts = 0;
     const maxAttempts = 20; // 20 tentativas = ~60 segundos
+    let mounted = true;
 
     const checkPremiumStatus = async () => {
+      if (!mounted) return;
+      
       try {
         attempts++;
-        console.log(`Checking premium status... attempt ${attempts}/${maxAttempts}`);
+        const clientId = xavecoClient.getClientId();
+        console.log(`[${attempts}/${maxAttempts}] Checking premium for client: ${clientId}`);
         
         const result = await xavecoClient.checkStatus();
-        console.log("Status result:", result);
+        console.log(`[${attempts}/${maxAttempts}] Status:`, result);
+        
+        if (!mounted) return;
         
         if (result.premium) {
           console.log("✅ Premium activated!");
           setStatus('success');
           // Redirecionar para o jogo principal
           setTimeout(() => {
-            navigate("/wizard");
+            if (mounted) navigate("/wizard");
           }, 1500);
         } else if (attempts >= maxAttempts) {
-          console.log("Max attempts reached, redirecting anyway");
-          // Após muitas tentativas, redirecionar mesmo assim
-          navigate("/wizard");
+          console.log("⚠️ Max attempts reached, redirecting anyway");
+          setStatus('error');
         } else {
           // Tentar novamente em 3 segundos
           setTimeout(checkPremiumStatus, 3000);
         }
       } catch (error) {
-        console.error("Error checking premium status:", error);
+        console.error(`[${attempts}/${maxAttempts}] Error:`, error);
+        if (!mounted) return;
+        
         if (attempts >= maxAttempts) {
           setStatus('error');
         } else {
@@ -45,7 +52,12 @@ const CheckoutSuccess = () => {
     };
 
     // Aguardar 2 segundos antes da primeira tentativa
-    setTimeout(checkPremiumStatus, 2000);
+    const timer = setTimeout(checkPremiumStatus, 2000);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
   }, [navigate]);
 
   return (
