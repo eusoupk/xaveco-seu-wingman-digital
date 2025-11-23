@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
       .upsert({
         client_id: clientId,
         is_premium: true,
-        premium_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 ano
+        premium_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'client_id'
