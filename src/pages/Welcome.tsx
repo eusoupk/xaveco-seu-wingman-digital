@@ -57,7 +57,7 @@ const Welcome = () => {
   }
   return <div className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-8">
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-md w-full">
-        <img alt="Xaveco" className="w-32 h-32 mb-6 animate-bounce" src="/lovable-uploads/ada81d60-eafb-42e3-b3c2-a554a0d578a9.png" />
+        <img alt="Xaveco" className="w-32 h-32 mb-6 animate-bounce" src="/lovable-uploads/83212dba-4f69-47c7-8e61-cf2ab51be0c2.png" />
         <h1 className="text-5xl font-black text-foreground mb-4 tracking-tight">
           Xaveco
         </h1>
