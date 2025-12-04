@@ -50,7 +50,7 @@ const Welcome = () => {
   if (checking) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <img src={xavecoIcon} alt="Xaveco" className="w-24 h-24 mb-4 mx-auto animate-bounce" />
+          <img alt="Xaveco" className="w-24 h-24 mb-4 mx-auto animate-bounce" src="/lovable-uploads/60cda92c-f044-47d4-a8d5-998548807f4f.jpg" />
           <p className="text-muted-foreground">Verificando acesso...</p>
         </div>
       </div>;
