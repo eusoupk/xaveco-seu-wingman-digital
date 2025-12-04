@@ -24,7 +24,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/success" element={<CheckoutSuccess />} />
           <Route path="/wizard" element={<Home />} className="bg-[#78160e]" />
           <Route path="/response-mode" element={<ResponseMode />} />
-          <Route path="/start-conversation" element={<StartConversationMode />} />
+          <Route path="/start-conversation" element={<StartConversationMode />} className="bg-[#78160e]" />
           <Route path="/embarrassing-mode" element={<EmbarrassingMode />} className="bg-[#78160e]" />
           <Route path="/old-xaveco" element={<XavecoMain />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
