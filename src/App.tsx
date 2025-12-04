@@ -12,11 +12,8 @@ import XavecoMain from "./pages/XavecoMain";
 import NotFound from "./pages/NotFound";
 import TrialPage from "./pages/TrialPage";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
-
 const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -25,7 +22,7 @@ const App = () => (
           <Route path="/" element={<Welcome />} />
           <Route path="/trial" element={<TrialPage />} />
           <Route path="/success" element={<CheckoutSuccess />} />
-          <Route path="/wizard" element={<Home />} />
+          <Route path="/wizard" element={<Home />} className="bg-[#78160e]" />
           <Route path="/response-mode" element={<ResponseMode />} />
           <Route path="/start-conversation" element={<StartConversationMode />} />
           <Route path="/embarrassing-mode" element={<EmbarrassingMode />} />
@@ -35,7 +32,5 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
-);
-
+  </QueryClientProvider>;
 export default App;
