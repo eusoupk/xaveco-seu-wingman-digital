@@ -3,8 +3,30 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-xaveco-client-id",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-xaveco-client-id, x-forwarded-for",
 };
+
+// Função para obter IP do usuário
+function getClientIP(req: Request): string {
+  // Tentar headers comuns de proxy/CDN
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  
+  const realIP = req.headers.get("x-real-ip");
+  if (realIP) {
+    return realIP.trim();
+  }
+  
+  const cfConnectingIP = req.headers.get("cf-connecting-ip");
+  if (cfConnectingIP) {
+    return cfConnectingIP.trim();
+  }
+  
+  // Fallback para IP desconhecido
+  return "unknown";
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -30,6 +52,34 @@ serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Obter IP do usuário
+    const userIP = getClientIP(req);
+    console.log(`🔍 Checking trial for client ${clientId} with IP: ${userIP}`);
+
+    // Verificar se IP já usou trial (apenas se IP não é "unknown")
+    if (userIP !== "unknown") {
+      const { data: existingIP, error: ipError } = await supabase
+        .from("trial_ips")
+        .select("*")
+        .eq("ip_address", userIP)
+        .maybeSingle();
+
+      if (ipError) {
+        console.error("Error checking IP:", ipError);
+      }
+
+      if (existingIP) {
+        console.log(`🚫 IP ${userIP} already used trial on ${existingIP.first_seen}`);
+        return new Response(JSON.stringify({ 
+          error: "trial_already_used",
+          message: "Este dispositivo já utilizou o período de teste gratuito. Assine para continuar usando."
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Verificar se usuário já existe
     const { data: existingUser } = await supabase
@@ -43,6 +93,18 @@ serve(async (req) => {
     trialExpiresAt.setDate(trialExpiresAt.getDate() + 2);
 
     if (existingUser) {
+      // Se usuário já usou todo o trial, não permitir reset
+      if (existingUser.trial_messages_left === 0 && existingUser.used_count > 0) {
+        console.log(`🚫 Client ${clientId} already exhausted trial`);
+        return new Response(JSON.stringify({ 
+          error: "trial_already_used",
+          message: "Você já utilizou seu período de teste gratuito. Assine para continuar usando."
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // Atualizar usuário existente com trial de 2 mensagens
       const { error } = await supabase
         .from("xaveco_users")
@@ -75,6 +137,23 @@ serve(async (req) => {
       }
     }
 
+    // Registrar IP na tabela trial_ips (apenas se IP não é "unknown")
+    if (userIP !== "unknown") {
+      const { error: ipInsertError } = await supabase
+        .from("trial_ips")
+        .insert({
+          ip_address: userIP,
+          client_id: clientId,
+        });
+
+      if (ipInsertError && !ipInsertError.message.includes("duplicate")) {
+        console.error("Error registering IP:", ipInsertError);
+        // Não falhar por erro de IP
+      } else {
+        console.log(`📝 Registered IP ${userIP} for client ${clientId}`);
+      }
+    }
+
     console.log(`✅ Trial started for client ${clientId}: 2 messages, expires at ${trialExpiresAt.toISOString()}`);
 
     // Log evento de trial iniciado
@@ -87,6 +166,7 @@ serve(async (req) => {
           metadata: {
             trial_messages_left: 2,
             trial_expires_at: trialExpiresAt.toISOString(),
+            ip_address: userIP,
           },
         });
     } catch (analyticsError) {

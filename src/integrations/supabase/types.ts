@@ -44,6 +44,30 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_ips: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          first_seen: string
+          id: string
+          ip_address: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          first_seen?: string
+          id?: string
+          ip_address: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          first_seen?: string
+          id?: string
+          ip_address?: string
+        }
+        Relationships: []
+      }
       xaveco_events: {
         Row: {
           client_id: string
