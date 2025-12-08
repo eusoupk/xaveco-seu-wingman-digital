@@ -19,13 +19,13 @@ const App = () => <QueryClientProvider client={queryClient}>
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Welcome />} className="bg-[#3c0c07]" />
+          <Route path="/" element={<Welcome />} />
           <Route path="/trial" element={<TrialPage />} />
           <Route path="/success" element={<CheckoutSuccess />} />
-          <Route path="/wizard" element={<Home />} className="bg-[#78160e]" />
-          <Route path="/response-mode" element={<ResponseMode />} className="bg-[#78160e]" />
-          <Route path="/start-conversation" element={<StartConversationMode />} className="bg-[#78160e]" />
-          <Route path="/embarrassing-mode" element={<EmbarrassingMode />} className="bg-[#78160e]" />
+          <Route path="/wizard" element={<Home />} />
+          <Route path="/response-mode" element={<ResponseMode />} />
+          <Route path="/start-conversation" element={<StartConversationMode />} />
+          <Route path="/embarrassing-mode" element={<EmbarrassingMode />} />
           <Route path="/old-xaveco" element={<XavecoMain />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
