@@ -8,6 +8,7 @@ const TrialPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [ipBlocked, setIpBlocked] = useState(false);
 
   useEffect(() => {
     const startTrial = async () => {
@@ -29,6 +30,11 @@ const TrialPage = () => {
           setTimeout(() => {
             navigate("/wizard");
           }, 1000);
+        } else if (response.status === 403) {
+          // IP ou trial já usado - mostrar paywall
+          console.log("Trial já usado - mostrando paywall");
+          setIpBlocked(true);
+          setError(true);
         } else {
           console.error("Erro ao iniciar trial");
           setError(true);
@@ -52,7 +58,7 @@ const TrialPage = () => {
     try {
       supabase.functions.invoke("analytics", {
         body: {
-          type: "checkout_click_trial",
+          type: ipBlocked ? "checkout_click_ip_blocked" : "checkout_click_trial",
           clientId: clientId,
         },
       }).catch(() => {});
@@ -70,8 +76,11 @@ const TrialPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-950 to-gray-950 flex items-center justify-center">
-        <div className="text-white text-xl">Iniciando seu trial de 2 mensagens grátis...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🧙</div>
+          <div className="text-foreground text-xl">Iniciando seu trial de 2 mensagens grátis...</div>
+        </div>
       </div>
     );
   }
@@ -80,7 +89,7 @@ const TrialPage = () => {
     return (
       <TrialPaywall
         visible={true}
-        trialInfo={{ limit: 2, usedCount: 0 }}
+        trialInfo={{ limit: 2, usedCount: 0, ipBlocked }}
         onUpgrade={handleUpgrade}
         onAlreadyHaveAccess={handleAlreadyHaveAccess}
       />
