@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { MessageSquare, Image as ImageIcon, Frown } from "lucide-react";
-import { xavecoClient } from "@/lib/xavecoClient";
+import { xavecoClient, CheckResponse } from "@/lib/xavecoClient";
 interface ModeCardProps {
   icon: React.ReactNode;
   title: string;
@@ -35,19 +35,62 @@ const ModeCard = ({
 };
 export default function Home() {
   const navigate = useNavigate();
+  const [status, setStatus] = useState<CheckResponse | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Verificar status premium ao carregar a página
   useEffect(() => {
     const checkPremium = async () => {
       try {
-        const status = await xavecoClient.checkStatus();
-        console.log("Status checked on /wizard:", status);
+        const result = await xavecoClient.checkStatus();
+        console.log("Status checked on /wizard:", result);
+        setStatus(result);
+        
+        // Se não é premium e não tem plays grátis, redirecionar para Welcome
+        if (!result.isPremium && (result.freePlaysLeft ?? 0) <= 0) {
+          console.log("Access expired, redirecting to Welcome");
+          navigate("/");
+        }
       } catch (error) {
         console.error("Error checking status:", error);
+      } finally {
+        setLoading(false);
       }
     };
     checkPremium();
-  }, []);
+  }, [navigate]);
+
+  // Função para formatar texto de expiração
+  const getExpirationText = () => {
+    if (!status) return null;
+    
+    if (status.isPremium && status.daysLeft !== null && status.daysLeft !== undefined) {
+      if (status.daysLeft <= 0) {
+        return "Último dia do seu acesso Premium! 🔥";
+      } else if (status.daysLeft === 1) {
+        return "Seu acesso Premium expira amanhã! ⚠️";
+      } else {
+        return `Seu acesso Premium expira em ${status.daysLeft} dias`;
+      }
+    } else if (!status.isPremium && status.freePlaysLeft && status.freePlaysLeft > 0) {
+      return `Você tem ${status.freePlaysLeft} jogada${status.freePlaysLeft > 1 ? 's' : ''} grátis restante${status.freePlaysLeft > 1 ? 's' : ''}`;
+    }
+    return null;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🧙</div>
+          <p className="text-muted-foreground">Verificando acesso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const expirationText = getExpirationText();
+
   return <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8 pt-8">
@@ -58,6 +101,19 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-2 text-foreground">
             Melhore suas habilidades sociais durante a noite!
           </h2>
+          
+          {/* Contador de expiração */}
+          {expirationText && (
+            <div className={`mt-4 px-4 py-2 rounded-full inline-block text-sm font-medium ${
+              status?.isPremium && status?.daysLeft !== null && status?.daysLeft !== undefined && status.daysLeft <= 1
+                ? 'bg-destructive/20 text-destructive border border-destructive/30'
+                : status?.isPremium
+                  ? 'bg-primary/20 text-primary border border-primary/30'
+                  : 'bg-muted text-muted-foreground border border-border'
+            }`}>
+              {expirationText}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
