@@ -19,6 +19,8 @@ export interface CheckResponse {
   ok: boolean;
   isPremium: boolean;
   freePlaysLeft?: number;
+  daysLeft?: number | null;
+  premiumUntil?: string | null;
 }
 
 export interface UpgradeResponse {

@@ -54,18 +54,28 @@ Deno.serve(async (req) => {
     }
 
     // Checar se premium ainda válido
-    const isPremium = user.is_premium && 
-                      (!user.premium_until || new Date(user.premium_until) > new Date());
+    const now = new Date();
+    const premiumUntil = user.premium_until ? new Date(user.premium_until) : null;
+    const isPremium = user.is_premium && premiumUntil && premiumUntil > now;
 
     const freePlaysLeft = user.trial_messages_left || 0;
 
-    console.log('Status:', { isPremium, freePlaysLeft });
+    // Calcular dias restantes
+    let daysLeft = null;
+    if (isPremium && premiumUntil) {
+      const diffMs = premiumUntil.getTime() - now.getTime();
+      daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    console.log('Status:', { isPremium, freePlaysLeft, daysLeft, premiumUntil: user.premium_until });
 
     return new Response(
       JSON.stringify({ 
         ok: true, 
         isPremium, 
-        freePlaysLeft 
+        freePlaysLeft,
+        daysLeft,
+        premiumUntil: user.premium_until
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
