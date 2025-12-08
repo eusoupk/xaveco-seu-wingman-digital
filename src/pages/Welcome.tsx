@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import xavecoIcon from "@/assets/xaveco-icon.png";
 import { xavecoClient } from "@/lib/xavecoClient";
-import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 const Welcome = () => {
   const navigate = useNavigate();
@@ -25,26 +23,7 @@ const Welcome = () => {
     };
     checkPremiumStatus();
   }, [navigate]);
-  const handleCheckoutClick = async () => {
-    const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
-    const clientId = xavecoClient.getClientId();
-
-    // Fire-and-forget analytics
-    try {
-      supabase.functions.invoke("analytics", {
-        body: {
-          type: "checkout_click_welcome",
-          clientId: clientId
-        }
-      }).catch(() => {});
-    } catch {
-      // Ignora erro de analytics
-    }
-
-    // Redireciona para Stripe com client_reference_id
-    window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}`;
-  };
-  const handleTrialClick = () => {
+  const handleStartTrial = () => {
     navigate("/trial");
   };
   if (checking) {
@@ -76,12 +55,9 @@ const Welcome = () => {
           <span className="underline">Termos de Serviço</span> e{" "}
           <span className="underline">Política de Privacidade</span>
         </p>
-        <Button size="lg" onClick={handleCheckoutClick} className="w-full h-14 text-lg font-bold rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
+        <Button size="lg" onClick={handleStartTrial} className="w-full h-14 text-lg font-bold rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
           Quero destravar minha coragem 💥
         </Button>
-        <button onClick={handleTrialClick} className="text-sm text-muted-foreground hover:text-foreground underline transition-colors w-full text-center">
-          Quero testar antes
-        </button>
       </div>
     </div>;
 };
