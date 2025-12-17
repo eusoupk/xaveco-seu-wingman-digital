@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { xavecoClient, Mode, Tone } from "@/lib/xavecoClient";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Copy, Sparkles } from "lucide-react";
+import { Copy, Sparkles, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { TrialPaywall } from "@/components/TrialPaywall";
 
@@ -30,6 +30,35 @@ export default function XavecoMain() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [trialInfo, setTrialInfo] = useState<any>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+  const [loadingPortal, setLoadingPortal] = useState(false);
+
+  // Verificar status premium ao carregar
+  useEffect(() => {
+    const checkPremiumStatus = async () => {
+      try {
+        const status = await xavecoClient.checkStatus();
+        setIsPremium(status.isPremium);
+      } catch {
+        // Ignora erro
+      }
+    };
+    checkPremiumStatus();
+  }, []);
+
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true);
+    try {
+      const response = await xavecoClient.getCustomerPortalUrl();
+      if (response.ok && response.url) {
+        window.location.href = response.url;
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao abrir gerenciamento de assinatura");
+    } finally {
+      setLoadingPortal(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!selectedMode || !selectedTone || context.trim().length < 3) {
@@ -99,6 +128,20 @@ export default function XavecoMain() {
           <p className="text-muted-foreground">
             Seu wingman pessoal para qualquer situação
           </p>
+          
+          {/* Botão Gerenciar Assinatura - apenas para premium */}
+          {isPremium && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManageSubscription}
+              disabled={loadingPortal}
+              className="mt-4"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              {loadingPortal ? "Abrindo..." : "Gerenciar assinatura"}
+            </Button>
+          )}
         </div>
 
         {!showPaywall && (

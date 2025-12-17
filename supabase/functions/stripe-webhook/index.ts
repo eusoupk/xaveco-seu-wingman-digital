@@ -95,6 +95,9 @@ serve(async (req) => {
       const premiumUntil = new Date();
       premiumUntil.setDate(premiumUntil.getDate() + 7);
 
+      // Extrair stripe_customer_id da sessão
+      const stripeCustomerId = session.customer as string;
+      
       // Atualizar ou criar usuário como premium
       const { data: existingUser } = await supabase
         .from("xaveco_users")
@@ -107,7 +110,8 @@ serve(async (req) => {
           .from("xaveco_users")
           .update({ 
             is_premium: true,
-            premium_until: premiumUntil.toISOString()
+            premium_until: premiumUntil.toISOString(),
+            stripe_customer_id: stripeCustomerId
           })
           .eq("client_id", clientId);
 
@@ -125,6 +129,7 @@ serve(async (req) => {
             trial_start: new Date().toISOString(),
             used_count: 0,
             trial_messages_left: 0,
+            stripe_customer_id: stripeCustomerId
           });
 
         if (error) {

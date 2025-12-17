@@ -98,6 +98,7 @@ export type Database = {
           created_at: string
           is_premium: boolean
           premium_until: string | null
+          stripe_customer_id: string | null
           trial_expires_at: string | null
           trial_messages_left: number | null
           trial_start: string
@@ -109,6 +110,7 @@ export type Database = {
           created_at?: string
           is_premium?: boolean
           premium_until?: string | null
+          stripe_customer_id?: string | null
           trial_expires_at?: string | null
           trial_messages_left?: number | null
           trial_start?: string
@@ -120,6 +122,7 @@ export type Database = {
           created_at?: string
           is_premium?: boolean
           premium_until?: string | null
+          stripe_customer_id?: string | null
           trial_expires_at?: string | null
           trial_messages_left?: number | null
           trial_start?: string
