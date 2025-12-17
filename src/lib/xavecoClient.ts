@@ -135,24 +135,6 @@ export class XavecoClient {
     return response.json();
   }
 
-  async createPromoCheckout(): Promise<{ ok: boolean; url: string; sessionId: string }> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/promo-checkout`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ 
-        success_url: `${window.location.origin}/checkout-success`,
-        cancel_url: window.location.origin
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}`);
-    }
-
-    return response.json();
-  }
-
   getClientId(): string {
     return this.clientId;
   }

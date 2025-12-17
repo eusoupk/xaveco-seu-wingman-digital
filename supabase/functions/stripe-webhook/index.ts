@@ -95,12 +95,8 @@ serve(async (req) => {
       const premiumUntil = new Date();
       premiumUntil.setDate(premiumUntil.getDate() + 7);
 
-      // Extrair stripe_customer_id e promo info da sessão
+      // Extrair stripe_customer_id
       const stripeCustomerId = session.customer as string;
-      const promoType = session.metadata?.promo_type || null;
-      const isPromo = !!promoType;
-      
-      console.log(`💰 Checkout - promo: ${isPromo ? promoType : 'none'}, customer: ${stripeCustomerId}`);
       
       // Atualizar ou criar usuário como premium
       const { data: existingUser } = await supabase
@@ -109,17 +105,11 @@ serve(async (req) => {
         .eq("client_id", clientId)
         .single();
 
-      const updateData: any = { 
+      const updateData = { 
         is_premium: true,
         premium_until: premiumUntil.toISOString(),
         stripe_customer_id: stripeCustomerId
       };
-
-      // Se for promoção, registrar
-      if (isPromo) {
-        updateData.promo_applied = true;
-        updateData.promo_type = promoType;
-      }
 
       if (existingUser) {
         const { error } = await supabase

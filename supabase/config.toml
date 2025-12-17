@@ -26,6 +26,3 @@ verify_jwt = false
 
 [functions.analytics]
 verify_jwt = false
-
-[functions.promo-checkout]
-verify_jwt = false
