@@ -47,12 +47,22 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        tropical: {
-          green: "hsl(var(--tropical-green))",
-          pink: "hsl(var(--tropical-pink))",
+        pixel: {
+          purple: {
+            dark: "hsl(var(--pixel-purple-dark))",
+            mid: "hsl(var(--pixel-purple-mid))",
+            light: "hsl(var(--pixel-purple-light))",
+          },
+          green: "hsl(var(--pixel-green))",
+          "green-dark": "hsl(var(--pixel-green-dark))",
+          red: "hsl(var(--pixel-red))",
+          pink: "hsl(var(--pixel-pink))",
+          yellow: "hsl(var(--pixel-yellow))",
+          cyan: "hsl(var(--pixel-cyan))",
         },
-        golden: "hsl(var(--golden-yellow))",
-        sky: "hsl(var(--sky-blue))",
+      },
+      fontFamily: {
+        pixel: ['"Press Start 2P"', 'cursive'],
       },
       borderRadius: {
         lg: "var(--radius)",
