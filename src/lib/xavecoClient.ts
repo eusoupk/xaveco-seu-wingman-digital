@@ -120,6 +120,21 @@ export class XavecoClient {
     return response.json();
   }
 
+  async getCustomerPortalUrl(): Promise<{ ok: boolean; url: string }> {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/customer-portal`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ return_url: window.location.origin }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  }
+
   getClientId(): string {
     return this.clientId;
   }
