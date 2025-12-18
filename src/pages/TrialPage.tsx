@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { TrialPaywall } from "@/components/TrialPaywall";
 import { xavecoClient } from "@/lib/xavecoClient";
 import { supabase } from "@/integrations/supabase/client";
+import { PixelBackground, PixelHeart } from "@/components/PixelBackground";
 
 const TrialPage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,6 @@ const TrialPage = () => {
       try {
         const clientId = xavecoClient.getClientId();
 
-        // Chamar edge function para iniciar trial
         const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/start-trial`, {
           method: 'POST',
           headers: {
@@ -26,12 +26,10 @@ const TrialPage = () => {
         });
 
         if (response.ok) {
-          // Trial iniciado com sucesso, redirecionar para tela principal
           setTimeout(() => {
             navigate("/wizard");
           }, 1000);
         } else if (response.status === 403) {
-          // IP ou trial já usado - mostrar paywall
           console.log("Trial já usado - mostrando paywall");
           setIpBlocked(true);
           setError(true);
@@ -54,7 +52,6 @@ const TrialPage = () => {
     const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
     const clientId = xavecoClient.getClientId();
 
-    // Fire-and-forget analytics
     try {
       supabase.functions.invoke("analytics", {
         body: {
@@ -66,7 +63,6 @@ const TrialPage = () => {
       // Ignora erro de analytics
     }
 
-    // Redireciona para Stripe
     window.location.href = `${CHECKOUT_URL}?client_reference_id=${clientId}`;
   };
 
@@ -76,10 +72,12 @@ const TrialPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">🧙</div>
-          <div className="text-foreground text-xl">Iniciando seu trial de 2 mensagens grátis...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
+        <PixelBackground />
+        <div className="text-center z-10">
+          <PixelHeart className="w-20 h-20 mx-auto mb-4 animate-bounce" />
+          <p className="font-pixel text-xs text-pixel-yellow">Iniciando trial...</p>
+          <p className="font-pixel text-[10px] text-muted-foreground mt-2">2 mensagens grátis</p>
         </div>
       </div>
     );
@@ -100,4 +98,3 @@ const TrialPage = () => {
 };
 
 export default TrialPage;
-
