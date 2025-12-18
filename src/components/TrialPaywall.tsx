@@ -1,10 +1,10 @@
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useState } from "react";
 import trialHero from "@/assets/trial-hero.jpg";
 import { xavecoClient } from "@/lib/xavecoClient";
 import { supabase } from "@/integrations/supabase/client";
+import { PixelBackground, PixelHeart, PixelCard } from "@/components/PixelBackground";
 
 interface TrialPaywallProps {
   visible: boolean;
@@ -38,52 +38,47 @@ export function TrialPaywall({
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-b from-purple-900 via-purple-950 to-gray-950">
-      <Card className="max-w-md w-full bg-gradient-to-b from-purple-900/50 via-purple-950/50 to-gray-950/50 border-purple-800/30 backdrop-blur-sm p-8 space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+      <PixelBackground showCity={false} />
+      
+      <PixelCard className="max-w-md w-full p-6 space-y-5 z-10">
         {/* Header */}
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold text-white">
+          <PixelHeart className="w-12 h-12 mx-auto mb-2" />
+          <h1 className="font-pixel text-lg text-pixel-yellow">
             Destravar Premium
           </h1>
-          <p className="text-purple-200/80 text-base">
+          <p className="font-pixel text-[10px] text-muted-foreground leading-relaxed">
             Você usou seus 2 testes gratuitos.<br/>
-            Para continuar usando o Xaveco, assine o plano Premium.
+            Para continuar, assine o Premium.
           </p>
         </div>
 
         {/* Hero Image */}
         <div className="space-y-3">
-          <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+          <div className="relative overflow-hidden rounded-sm border-2 border-pixel-purple-light/30"
+               style={{ boxShadow: '4px 4px 0 rgba(0,0,0,0.3)' }}>
             <img 
               src={slides[currentSlide]} 
               alt="Casal se divertindo"
-              className="w-full h-64 object-cover"
+              className="w-full h-48 object-cover"
             />
-          </div>
-          
-          <div className="flex justify-center gap-2">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentSlide ? 'bg-white w-6' : 'bg-white/40'
-                }`}
-                aria-label={`Slide ${index + 1}`}
-              />
-            ))}
           </div>
         </div>
 
         {/* Benefits */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-purple-100">
-            <Check className="w-5 h-5 text-green-400" />
-            <span className="text-sm font-medium">Xavecos ilimitados</span>
+          <div className="flex items-center gap-3 text-foreground">
+            <div className="w-5 h-5 bg-pixel-green flex items-center justify-center rounded-sm">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+            <span className="font-pixel text-[10px]">Xavecos ilimitados</span>
           </div>
-          <div className="flex items-center gap-2 text-purple-100">
-            <Check className="w-5 h-5 text-green-400" />
-            <span className="text-sm font-medium">Cancele quando quiser</span>
+          <div className="flex items-center gap-3 text-foreground">
+            <div className="w-5 h-5 bg-pixel-green flex items-center justify-center rounded-sm">
+              <Check className="w-3 h-3 text-white" />
+            </div>
+            <span className="font-pixel text-[10px]">Cancele quando quiser</span>
           </div>
         </div>
 
@@ -91,27 +86,28 @@ export function TrialPaywall({
         <Button
           onClick={handleCheckoutClick}
           size="lg"
-          className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-600/30 transition-all hover:scale-[1.02]"
+          className="w-full font-pixel text-xs py-6 bg-pixel-green hover:bg-pixel-green-dark text-white border-b-4 border-pixel-green-dark hover:border-b-2 hover:translate-y-[2px] active:border-b-0 active:translate-y-1 transition-all duration-75 rounded-sm"
+          style={{ boxShadow: '0 4px 0 hsl(120 60% 30%)' }}
         >
-          Destravar Premium — R$19,90/semana
+          Premium — R$19,90/semana
         </Button>
 
         {/* Bottom Links */}
         <div className="flex items-center justify-center gap-6 pt-2">
           <button
             onClick={onAlreadyHaveAccess}
-            className="text-sm text-purple-300/80 hover:text-purple-200 underline transition-colors"
+            className="font-pixel text-[8px] text-muted-foreground hover:text-pixel-purple-light underline transition-colors"
           >
             Restaurar acesso
           </button>
           <button
             onClick={() => alert("Termos ainda não disponíveis")}
-            className="text-sm text-purple-300/80 hover:text-purple-200 underline transition-colors"
+            className="font-pixel text-[8px] text-muted-foreground hover:text-pixel-purple-light underline transition-colors"
           >
             Termos
           </button>
         </div>
-      </Card>
+      </PixelCard>
     </div>
   );
 }
