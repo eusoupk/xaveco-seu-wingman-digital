@@ -2,13 +2,14 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { xavecoClient } from "@/lib/xavecoClient";
 import { useEffect, useState } from "react";
-import { Heart, Mail, Settings, Sparkles } from "lucide-react";
+import { Heart, Mail, Settings, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { PixelBackground, PixelHeart } from "@/components/PixelBackground";
 import { pixelSound } from "@/lib/pixelSound";
 
 const Welcome = () => {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(pixelSound.isEnabled());
 
   useEffect(() => {
     const checkPremiumStatus = async () => {
@@ -33,6 +34,15 @@ const Welcome = () => {
     navigate("/trial");
   };
 
+  const toggleSound = () => {
+    const newState = !soundEnabled;
+    setSoundEnabled(newState);
+    pixelSound.setEnabled(newState);
+    if (newState) {
+      pixelSound.playClick();
+    }
+  };
+
   if (checking) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
@@ -48,6 +58,22 @@ const Welcome = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-between p-6 pb-8 relative overflow-hidden">
       <PixelBackground />
+      
+      {/* Sound Toggle */}
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          onClick={toggleSound}
+          className="p-3 bg-pixel-purple-mid border-2 border-pixel-purple-light/30 rounded-sm hover:bg-pixel-purple-light/20 transition-colors"
+          style={{ boxShadow: '2px 2px 0 rgba(0,0,0,0.3)' }}
+          aria-label={soundEnabled ? "Desativar sons" : "Ativar sons"}
+        >
+          {soundEnabled ? (
+            <Volume2 className="w-5 h-5 text-pixel-green" />
+          ) : (
+            <VolumeX className="w-5 h-5 text-muted-foreground" />
+          )}
+        </button>
+      </div>
       
       <div className="flex-1 flex flex-col items-center justify-center text-center max-w-md w-full z-10">
         <PixelHeart className="w-24 h-24 mb-4 animate-pulse" />
