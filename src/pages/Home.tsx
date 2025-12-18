@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { xavecoClient, CheckResponse } from "@/lib/xavecoClient";
 import { PixelBackground, PixelHeart, PixelCard } from "@/components/PixelBackground";
+import { pixelSound } from "@/lib/pixelSound";
 
 interface ModeCardProps {
   emoji: string;
@@ -13,8 +14,13 @@ interface ModeCardProps {
 }
 
 const ModeCard = ({ emoji, title, description, stars, tipsCount, onClick }: ModeCardProps) => {
+  const handleClick = () => {
+    pixelSound.playSelect();
+    onClick();
+  };
+  
   return (
-    <PixelCard onClick={onClick} className="hover:scale-[1.02] transition-transform">
+    <PixelCard onClick={handleClick} className="hover:scale-[1.02] transition-transform">
       <div className="flex flex-col items-center text-center space-y-2">
         <div className="text-4xl">{emoji}</div>
         <h3 className="font-pixel text-xs text-pixel-yellow">{title}</h3>
