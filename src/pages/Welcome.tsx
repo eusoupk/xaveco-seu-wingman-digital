@@ -4,6 +4,7 @@ import { xavecoClient } from "@/lib/xavecoClient";
 import { useEffect, useState } from "react";
 import { Heart, Mail, Settings, Sparkles } from "lucide-react";
 import { PixelBackground, PixelHeart } from "@/components/PixelBackground";
+import { pixelSound } from "@/lib/pixelSound";
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const Welcome = () => {
   }, [navigate]);
 
   const handleStartTrial = () => {
+    pixelSound.playStart();
     navigate("/trial");
   };
 

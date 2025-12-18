@@ -7,6 +7,7 @@ import { ArrowLeft, Sparkles, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { TrialPaywall } from "@/components/TrialPaywall";
 import { PixelBackground, PixelHeart, PixelCard } from "@/components/PixelBackground";
+import { pixelSound } from "@/lib/pixelSound";
 
 const tones: { id: Tone; label: string }[] = [
   { id: "casual", label: "Casual" },
@@ -28,9 +29,11 @@ export default function EmbarrassingMode() {
 
   const handleGenerate = async () => {
     if (!selectedTone || situation.trim().length < 5) {
+      pixelSound.playError();
       toast.error("Descreva a situação e escolha um tom");
       return;
     }
+    pixelSound.playClick();
     setLoading(true);
     setSuggestions([]);
     try {
@@ -39,6 +42,7 @@ export default function EmbarrassingMode() {
       if (response.trial) {
         setTrialInfo(response.trial);
       }
+      pixelSound.playSuccess();
       toast.success("Sugestões geradas!");
     } catch (error: any) {
       if (error.code === "trial_expired") {
@@ -53,6 +57,7 @@ export default function EmbarrassingMode() {
   };
 
   const handleCopy = (text: string) => {
+    pixelSound.playCopy();
     navigator.clipboard.writeText(text);
     toast.success("Copiado!");
   };

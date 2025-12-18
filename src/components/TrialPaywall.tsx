@@ -5,6 +5,7 @@ import trialHero from "@/assets/trial-hero.jpg";
 import { xavecoClient } from "@/lib/xavecoClient";
 import { supabase } from "@/integrations/supabase/client";
 import { PixelBackground, PixelHeart, PixelCard } from "@/components/PixelBackground";
+import { pixelSound } from "@/lib/pixelSound";
 
 interface TrialPaywallProps {
   visible: boolean;
@@ -23,6 +24,7 @@ export function TrialPaywall({
   const slides = [trialHero];
 
   const handleCheckoutClick = async () => {
+    pixelSound.playStart();
     const CHECKOUT_URL = "https://buy.stripe.com/3cI3cveNM7A95mj1l69oc03";
     const clientId = xavecoClient.getClientId();
 

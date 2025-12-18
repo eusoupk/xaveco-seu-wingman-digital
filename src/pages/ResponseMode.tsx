@@ -7,6 +7,7 @@ import { ArrowLeft, Upload, Sparkles, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { TrialPaywall } from "@/components/TrialPaywall";
 import { PixelBackground, PixelHeart, PixelCard } from "@/components/PixelBackground";
+import { pixelSound } from "@/lib/pixelSound";
 
 const tones: { id: Tone; label: string }[] = [
   { id: "casual", label: "Casual" },
@@ -42,9 +43,11 @@ export default function ResponseMode() {
 
   const handleGenerate = async () => {
     if (!selectedTone) {
+      pixelSound.playError();
       toast.error("Escolha um tom primeiro");
       return;
     }
+    pixelSound.playClick();
     setLoading(true);
     setSuggestions([]);
     try {
@@ -54,6 +57,7 @@ export default function ResponseMode() {
       if (response.trial) {
         setTrialInfo(response.trial);
       }
+      pixelSound.playSuccess();
       toast.success("Sugestões geradas!");
     } catch (error: any) {
       if (error.code === "trial_expired") {
@@ -68,6 +72,7 @@ export default function ResponseMode() {
   };
 
   const handleCopy = (text: string) => {
+    pixelSound.playCopy();
     navigator.clipboard.writeText(text);
     toast.success("Copiado!");
   };
