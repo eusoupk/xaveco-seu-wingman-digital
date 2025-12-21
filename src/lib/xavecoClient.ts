@@ -27,38 +27,108 @@ export interface UpgradeResponse {
   ok: boolean;
 }
 
+// Storage helper with fallback
+const safeStorage = {
+  getItem(key: string): string | null {
+    try {
+      const value = localStorage.getItem(key);
+      if (value !== null) return value;
+    } catch {
+      // localStorage failed, try sessionStorage
+    }
+    try {
+      return sessionStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem(key: string, value: string): void {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // localStorage failed, fallback to sessionStorage
+    }
+    try {
+      sessionStorage.setItem(key, value);
+    } catch {
+      // Both failed, continue silently
+    }
+  }
+};
+
+// Fetch with timeout using AbortController
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs: number = 25000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export class XavecoClient {
   private clientId: string;
 
   constructor() {
-    // Generate or retrieve clientId from localStorage
-    let id = localStorage.getItem('xaveco-client-id');
-    if (!id) {
+    this.clientId = this.ensureValidClientId();
+  }
+
+  // Defensive client_id validation and generation
+  private ensureValidClientId(): string {
+    let id = safeStorage.getItem('xaveco-client-id');
+    
+    // Validate: must exist, be non-empty, and have expected format
+    if (!id || id.trim() === '' || !id.startsWith('client_')) {
       id = `client_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      localStorage.setItem('xaveco-client-id', id);
+      safeStorage.setItem('xaveco-client-id', id);
     }
-    this.clientId = id;
+    
+    return id;
+  }
+
+  // Re-validate before each request
+  private getValidClientId(): string {
+    // Re-check in case storage was cleared
+    const storedId = safeStorage.getItem('xaveco-client-id');
+    if (!storedId || storedId.trim() === '' || !storedId.startsWith('client_')) {
+      this.clientId = this.ensureValidClientId();
+    }
+    return this.clientId;
   }
 
   private getHeaders(): Record<string, string> {
     return {
       'Content-Type': 'application/json',
-      'x-xaveco-client-id': this.clientId,
+      'x-xaveco-client-id': this.getValidClientId(),
       'apikey': SUPABASE_ANON_KEY || '',
     };
   }
 
   async generateSuggestions(mode: Mode, tone: Tone, input?: string, imageBase64?: string): Promise<XavecoResponse> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/xaveco`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ 
-        mode, 
-        tone, 
-        input: input || '', 
-        image: imageBase64 || null 
-      }),
-    });
+    const response = await fetchWithTimeout(
+      `${SUPABASE_URL}/functions/v1/xaveco`,
+      {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ 
+          mode, 
+          tone, 
+          input: input || '', 
+          image: imageBase64 || null 
+        }),
+      },
+      25000 // 25 second timeout
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -77,10 +147,14 @@ export class XavecoClient {
   }
 
   async checkStatus(): Promise<CheckResponse> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/status`, {
-      method: 'GET',
-      headers: this.getHeaders(),
-    });
+    const response = await fetchWithTimeout(
+      `${SUPABASE_URL}/functions/v1/status`,
+      {
+        method: 'GET',
+        headers: this.getHeaders(),
+      },
+      15000 // 15 second timeout for status check
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -91,11 +165,15 @@ export class XavecoClient {
   }
 
   async confirmCheckout(sessionId: string): Promise<{ ok: boolean; isPremium: boolean }> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/confirm-checkout`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ session_id: sessionId }),
-    });
+    const response = await fetchWithTimeout(
+      `${SUPABASE_URL}/functions/v1/confirm-checkout`,
+      {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ session_id: sessionId }),
+      },
+      20000 // 20 second timeout
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -106,11 +184,15 @@ export class XavecoClient {
   }
 
   async upgrade(): Promise<UpgradeResponse> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/upgrade`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ clientId: this.clientId }),
-    });
+    const response = await fetchWithTimeout(
+      `${SUPABASE_URL}/functions/v1/upgrade`,
+      {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ clientId: this.getValidClientId() }),
+      },
+      20000 // 20 second timeout
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -121,11 +203,15 @@ export class XavecoClient {
   }
 
   async getCustomerPortalUrl(): Promise<{ ok: boolean; url: string }> {
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/customer-portal`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: JSON.stringify({ return_url: window.location.origin }),
-    });
+    const response = await fetchWithTimeout(
+      `${SUPABASE_URL}/functions/v1/customer-portal`,
+      {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ return_url: window.location.origin }),
+      },
+      20000 // 20 second timeout
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -136,7 +222,7 @@ export class XavecoClient {
   }
 
   getClientId(): string {
-    return this.clientId;
+    return this.getValidClientId();
   }
 }
 
