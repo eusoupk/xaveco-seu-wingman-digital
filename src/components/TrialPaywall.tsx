@@ -46,15 +46,28 @@ export function TrialPaywall({
           <h1 className="font-pixel text-lg text-pixel-yellow">
             Destravar Premium
           </h1>
-          <p className="font-pixel text-[10px] text-foreground leading-relaxed">
-            🔥 Sua próxima mensagem já está pronta.<br/><br/>
-            A gente analisou a situação e montou a melhor mensagem pra você enviar agora.<br/><br/>
-            Desbloqueie pra copiar e usar.
-          </p>
-          <p className="font-pixel text-[8px] text-muted-foreground leading-relaxed">
-            Sem enrolação. É só copiar e mandar.
+          <p className="font-pixel text-[10px] text-pixel-yellow leading-relaxed">
+            🔥 Sua mensagem já está pronta.
           </p>
         </div>
+
+        {/* Main copy */}
+        <div className="text-center space-y-2">
+          <p className="font-pixel text-[10px] text-foreground leading-relaxed">
+            A gente analisou a conversa e criou a melhor mensagem pra você enviar agora.
+          </p>
+          <p className="font-pixel text-[10px] text-foreground leading-relaxed">
+            Ela já está pronta.
+          </p>
+          <p className="font-pixel text-[10px] text-foreground leading-relaxed">
+            Falta só desbloquear para copiar e mandar.
+          </p>
+        </div>
+
+        {/* Social proof */}
+        <p className="font-pixel text-[8px] text-muted-foreground text-center leading-relaxed">
+          🔥 Mais de 1.300 pessoas já usaram para não serem ignoradas.
+        </p>
 
         {/* Pixel Art Image */}
         <div className="relative overflow-hidden rounded-sm border-2 border-pixel-purple-light/30"
@@ -88,6 +101,11 @@ export function TrialPaywall({
           </div>
         </div>
 
+        {/* Micro urgency */}
+        <p className="font-pixel text-[9px] text-pixel-yellow text-center leading-relaxed">
+          ⚡ Sua resposta está bloqueada esperando você.
+        </p>
+
         {/* CTA Button */}
         <Button
           onClick={handleCheckoutClick}
@@ -95,7 +113,7 @@ export function TrialPaywall({
           className="w-full font-pixel text-[9px] sm:text-xs py-6 bg-pixel-green hover:bg-pixel-green-dark text-white border-b-4 border-pixel-green-dark hover:border-b-2 hover:translate-y-[2px] active:border-b-0 active:translate-y-1 transition-all duration-75 rounded-sm leading-relaxed"
           style={{ boxShadow: '0 4px 0 hsl(120 60% 30%)' }}
         >
-          Desbloquear minhas mensagens — R$19,90/semana
+          Ver minha mensagem agora — R$19,90/semana
         </Button>
 
         {/* Bottom Links */}
