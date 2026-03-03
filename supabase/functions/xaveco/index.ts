@@ -96,9 +96,10 @@ serve(async (req) => {
       userRecord = newUser;
     }
 
-    const isPremium = userRecord.is_premium;
+    const isAdmin = userRecord.is_admin === true;
+    const isPremium = userRecord.is_premium || isAdmin;
 
-    // Handle trial logic for non-premium users
+    // Handle trial logic for non-premium users (admins bypass)
     if (!isPremium) {
       const trialMessagesLeft = userRecord.trial_messages_left ?? 0;
 

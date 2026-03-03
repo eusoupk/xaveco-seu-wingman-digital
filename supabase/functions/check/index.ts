@@ -42,7 +42,8 @@ serve(async (req) => {
       .single();
 
     // If no record exists, return default trial info
-    const isPremium = userRecord?.is_premium || false;
+    const isAdmin = userRecord?.is_admin === true;
+    const isPremium = isAdmin || (userRecord?.is_premium || false);
     const usedCount = userRecord?.used_count || 0;
     const trialStart = userRecord?.trial_start 
       ? new Date(userRecord.trial_start).getTime()

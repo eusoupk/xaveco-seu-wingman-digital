@@ -12,6 +12,7 @@ import XavecoMain from "./pages/XavecoMain";
 import NotFound from "./pages/NotFound";
 import TrialPage from "./pages/TrialPage";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
+import DevAdmin from "./pages/DevAdmin";
 const queryClient = new QueryClient();
 const App = () => <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -27,6 +28,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/start-conversation" element={<StartConversationMode />} />
           <Route path="/embarrassing-mode" element={<EmbarrassingMode />} />
           <Route path="/old-xaveco" element={<XavecoMain />} />
+          <Route path="/dev-admin" element={<DevAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
