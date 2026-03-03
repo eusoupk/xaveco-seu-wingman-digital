@@ -28,7 +28,7 @@ const App = () => <QueryClientProvider client={queryClient}>
           <Route path="/start-conversation" element={<StartConversationMode />} />
           <Route path="/embarrassing-mode" element={<EmbarrassingMode />} />
           <Route path="/old-xaveco" element={<XavecoMain />} />
-          <Route path="/dev-admin" element={<DevAdmin />} />
+          <Route path="/__pk_gate_9f3a" element={<DevAdmin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
