@@ -96,6 +96,7 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          is_admin: boolean
           is_premium: boolean
           premium_until: string | null
           promo_applied: boolean | null
@@ -110,6 +111,7 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string
+          is_admin?: boolean
           is_premium?: boolean
           premium_until?: string | null
           promo_applied?: boolean | null
@@ -124,6 +126,7 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
+          is_admin?: boolean
           is_premium?: boolean
           premium_until?: string | null
           promo_applied?: boolean | null

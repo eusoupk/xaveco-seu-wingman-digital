@@ -54,9 +54,10 @@ Deno.serve(async (req) => {
     }
 
     // Checar se premium ainda válido
+    const isAdmin = user.is_admin === true;
     const now = new Date();
     const premiumUntil = user.premium_until ? new Date(user.premium_until) : null;
-    const isPremium = user.is_premium && premiumUntil && premiumUntil > now;
+    const isPremium = isAdmin || (user.is_premium && premiumUntil && premiumUntil > now);
 
     const freePlaysLeft = user.trial_messages_left || 0;
 
