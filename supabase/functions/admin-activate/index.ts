@@ -11,6 +11,16 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Validate admin secret
+    const adminSecret = Deno.env.get("ADMIN_SECRET");
+    const providedSecret = req.headers.get("x-admin-secret");
+    if (!adminSecret || providedSecret !== adminSecret) {
+      return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const clientId = req.headers.get("x-xaveco-client-id");
     if (!clientId) {
       return new Response(JSON.stringify({ ok: false, error: "Missing client_id" }), {

@@ -1,10 +1,19 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { xavecoClient } from "@/lib/xavecoClient";
+import NotFound from "./NotFound";
+
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY;
 
 export default function DevAdmin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<string>("idle");
+
+  // Gate: require valid key query param
+  if (!ADMIN_KEY || searchParams.get("key") !== ADMIN_KEY) {
+    return <NotFound />;
+  }
 
   const activate = async () => {
     setStatus("activating...");
@@ -16,6 +25,7 @@ export default function DevAdmin() {
           headers: {
             "Content-Type": "application/json",
             "x-xaveco-client-id": xavecoClient.getClientId(),
+            "x-admin-secret": ADMIN_KEY,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "",
           },
         }
